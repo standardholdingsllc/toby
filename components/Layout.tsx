@@ -43,7 +43,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   // If we are on the landing page, render a simplified layout
   if (router.pathname === '/') {
     return (
-      <div className={`min-h-screen ${darkMode ? 'dark' : ''}`}>
+      <div className={`min-h-screen ${darkMode ? 'dark' : ''} bg-gradient-to-br from-slate-50 via-emerald-50/30 to-amber-50/20 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900`}>
         {children}
         {/* Toast Notifications */}
         <div className="fixed bottom-4 right-4 z-50 space-y-2">
