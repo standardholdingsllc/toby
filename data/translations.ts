@@ -448,6 +448,22 @@ export const translations = {
     october: 'October',
     november: 'November',
     december: 'December',
+    
+    // Landing Page
+    landingTitle: 'The Modern Clinic Operating System',
+    landingSubtitle: 'Streamline your veterinary practice with intelligent scheduling, patient management, and automated marketing. All in one beautiful interface.',
+    contactSales: 'Contact Sales',
+    accessAccount: 'Access Account',
+    featuresTitle: 'Everything you need to run a modern clinic',
+    feature1Title: 'Smart Scheduling',
+    feature1Desc: 'Drag-and-drop calendar with automated reminders and smart conflict detection.',
+    feature2Title: 'Patient Records',
+    feature2Desc: 'Comprehensive digital records for every pet, accessible from anywhere.',
+    feature3Title: 'Automated Marketing',
+    feature3Desc: 'Keep clients engaged with automated campaigns and personalized messages.',
+    readyToStart: 'Ready to modernize your clinic?',
+    getInTouch: 'Get in touch with our team today.',
+    copyright: '© 2024 Toby Inc. All rights reserved.',
   },
   
   es: {
@@ -895,6 +911,22 @@ export const translations = {
     october: 'Octubre',
     november: 'Noviembre',
     december: 'Diciembre',
+
+    // Landing Page
+    landingTitle: 'El Sistema Operativo para Clínicas Modernas',
+    landingSubtitle: 'Optimiza tu práctica veterinaria con agenda inteligente, gestión de pacientes y marketing automatizado. Todo en una interfaz hermosa.',
+    contactSales: 'Contactar Ventas',
+    accessAccount: 'Acceder a Cuenta',
+    featuresTitle: 'Todo lo que necesitas para dirigir una clínica moderna',
+    feature1Title: 'Agenda Inteligente',
+    feature1Desc: 'Calendario arrastrar y soltar con recordatorios automáticos y detección de conflictos.',
+    feature2Title: 'Registros de Pacientes',
+    feature2Desc: 'Expedientes digitales completos para cada mascota, accesibles desde cualquier lugar.',
+    feature3Title: 'Marketing Automatizado',
+    feature3Desc: 'Mantén a tus clientes comprometidos con campañas automatizadas y mensajes personalizados.',
+    readyToStart: '¿Listo para modernizar tu clínica?',
+    getInTouch: 'Ponte en contacto con nuestro equipo hoy.',
+    copyright: '© 2024 Toby Inc. Todos los derechos reservados.',
   },
 };
 

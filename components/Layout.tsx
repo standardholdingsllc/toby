@@ -40,6 +40,21 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
 
   const isActive = (href: string) => router.pathname.startsWith(href);
 
+  // If we are on the landing page, render a simplified layout
+  if (router.pathname === '/') {
+    return (
+      <div className={`min-h-screen ${darkMode ? 'dark' : ''}`}>
+        {children}
+        {/* Toast Notifications */}
+        <div className="fixed bottom-4 right-4 z-50 space-y-2">
+          {toasts.map((toast) => (
+            <Toast key={toast.id} {...toast} />
+          ))}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className={`min-h-screen ${darkMode ? 'dark' : ''}`}>
       <div className="flex min-h-screen bg-gradient-to-br from-slate-50 via-emerald-50/30 to-amber-50/20 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">

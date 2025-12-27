@@ -89,7 +89,7 @@ interface AppContextType {
   addPetCustomProperty: (petId: string, property: Omit<CustomProperty, 'id'>) => void;
   updatePetCustomProperty: (petId: string, propertyId: string, data: Partial<CustomProperty>) => void;
   removePetCustomProperty: (petId: string, propertyId: string) => void;
-  getAllPropertyNames: () => { name: string; type: 'text' | 'number' | 'date' | 'boolean'; count: number }[];
+  getAllPropertyNames: () => { name: string; type: 'text' | 'number' | 'date' | 'select'; count: number }[];
   
   // Toast notifications
   toasts: Toast[];
@@ -395,7 +395,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
   // Get all unique property names from clients and pets
   const getAllPropertyNames = useCallback(() => {
-    const propertyMap = new Map<string, { type: 'text' | 'number' | 'date' | 'boolean'; count: number }>();
+    const propertyMap = new Map<string, { type: 'text' | 'number' | 'date' | 'select'; count: number }>();
     
     // Collect from clients
     clients.forEach(client => {
