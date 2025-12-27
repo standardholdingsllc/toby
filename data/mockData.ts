@@ -128,7 +128,7 @@ export interface Workflow {
   name: string;
   description: string;
   trigger: {
-    type: 'days_before_appointment' | 'days_after_visit' | 'pet_birthday' | 'vaccination_due' | 'new_client' | 'inactive_client';
+    type: 'days_before_appointment' | 'days_after_visit' | 'pet_birthday' | 'vaccination_due' | 'new_client' | 'inactive_client' | 'payment_received' | 'invoice_overdue';
     value?: number;
   };
   actions: {
