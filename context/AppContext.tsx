@@ -2,8 +2,10 @@ import React, { createContext, useContext, useState, useCallback, ReactNode } fr
 import { Language, translations, TranslationKey } from '@/data/translations';
 import {
   Client, Pet, Appointment, Message, Campaign, User, MedicalRecord,
+  Segment, Template, Workflow,
   initialClients, initialPets, initialAppointments, initialMessages,
-  initialCampaigns, initialUsers, initialMedicalRecords
+  initialCampaigns, initialUsers, initialMedicalRecords,
+  initialSegments, initialTemplates, initialWorkflows
 } from '@/data/mockData';
 
 interface Toast {
@@ -50,6 +52,18 @@ interface AppContextType {
   setCampaigns: React.Dispatch<React.SetStateAction<Campaign[]>>;
   addCampaign: (campaign: Omit<Campaign, 'id' | 'sentAt'>) => void;
   
+  segments: Segment[];
+  setSegments: React.Dispatch<React.SetStateAction<Segment[]>>;
+  addSegment: (segment: Omit<Segment, 'id' | 'createdAt'>) => void;
+  
+  templates: Template[];
+  setTemplates: React.Dispatch<React.SetStateAction<Template[]>>;
+  addTemplate: (template: Omit<Template, 'id' | 'createdAt'>) => void;
+  
+  workflows: Workflow[];
+  setWorkflows: React.Dispatch<React.SetStateAction<Workflow[]>>;
+  updateWorkflow: (id: string, data: Partial<Workflow>) => void;
+  
   users: User[];
   setUsers: React.Dispatch<React.SetStateAction<User[]>>;
   addUser: (user: Omit<User, 'id'>) => void;
@@ -81,6 +95,9 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const [appointments, setAppointments] = useState<Appointment[]>(initialAppointments);
   const [messages, setMessages] = useState<{ [clientId: string]: Message[] }>(initialMessages);
   const [campaigns, setCampaigns] = useState<Campaign[]>(initialCampaigns);
+  const [segments, setSegments] = useState<Segment[]>(initialSegments);
+  const [templates, setTemplates] = useState<Template[]>(initialTemplates);
+  const [workflows, setWorkflows] = useState<Workflow[]>(initialWorkflows);
   const [users, setUsers] = useState<User[]>(initialUsers);
   const [medicalRecords] = useState<MedicalRecord[]>(initialMedicalRecords);
   
@@ -187,10 +204,37 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       ...campaignData,
       id: Date.now().toString(),
       sentAt: new Date().toISOString(),
-    };
+    } as Campaign;
     setCampaigns(prev => [newCampaign, ...prev]);
     showToast(t('campaignSent'));
   }, [showToast, t]);
+  
+  // Segment functions
+  const addSegment = useCallback((segmentData: Omit<Segment, 'id' | 'createdAt'>) => {
+    const newSegment: Segment = {
+      ...segmentData,
+      id: Date.now().toString(),
+      createdAt: new Date().toISOString(),
+    };
+    setSegments(prev => [...prev, newSegment]);
+    showToast('Segment created successfully!');
+  }, [showToast]);
+  
+  // Template functions
+  const addTemplate = useCallback((templateData: Omit<Template, 'id' | 'createdAt'>) => {
+    const newTemplate: Template = {
+      ...templateData,
+      id: Date.now().toString(),
+      createdAt: new Date().toISOString(),
+    };
+    setTemplates(prev => [...prev, newTemplate]);
+    showToast('Template created successfully!');
+  }, [showToast]);
+  
+  // Workflow functions
+  const updateWorkflow = useCallback((id: string, data: Partial<Workflow>) => {
+    setWorkflows(prev => prev.map(w => w.id === id ? { ...w, ...data } : w));
+  }, []);
   
   // User functions
   const addUser = useCallback((userData: Omit<User, 'id'>) => {
@@ -234,6 +278,15 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     campaigns,
     setCampaigns,
     addCampaign,
+    segments,
+    setSegments,
+    addSegment,
+    templates,
+    setTemplates,
+    addTemplate,
+    workflows,
+    setWorkflows,
+    updateWorkflow,
     users,
     setUsers,
     addUser,

@@ -47,9 +47,72 @@ export interface Message {
 export interface Campaign {
   id: string;
   channel: 'email' | 'whatsapp';
+  subject?: string;
   message: string;
   recipients: number;
+  segmentId?: string;
+  segmentName?: string;
+  templateId?: string;
+  tags: string[];
   sentAt: string;
+  scheduledFor?: string;
+  status: 'sent' | 'scheduled' | 'draft';
+  stats: {
+    delivered: number;
+    opened: number;
+    clicked: number;
+    bounced: number;
+  };
+}
+
+export interface Segment {
+  id: string;
+  name: string;
+  description: string;
+  filters: SegmentFilter[];
+  clientCount: number;
+  createdAt: string;
+  isSystem: boolean;
+}
+
+export interface SegmentFilter {
+  field: 'species' | 'lastVisit' | 'petCount' | 'createdAt' | 'breed' | 'all';
+  operator: 'equals' | 'contains' | 'greaterThan' | 'lessThan' | 'between' | 'daysAgo';
+  value: string | number | [number, number];
+}
+
+export interface Template {
+  id: string;
+  name: string;
+  channel: 'email' | 'whatsapp' | 'both';
+  subject?: string;
+  content: string;
+  category: 'reminder' | 'promotion' | 'greeting' | 'followup' | 'reengagement' | 'custom';
+  tags: string[];
+  createdAt: string;
+  isSystem: boolean;
+}
+
+export interface Workflow {
+  id: string;
+  name: string;
+  description: string;
+  trigger: {
+    type: 'days_before_appointment' | 'days_after_visit' | 'pet_birthday' | 'vaccination_due' | 'new_client' | 'inactive_client';
+    value?: number;
+  };
+  actions: {
+    type: 'send_email' | 'send_whatsapp';
+    templateId: string;
+    delayDays?: number;
+  }[];
+  status: 'active' | 'paused' | 'draft';
+  stats: {
+    sent: number;
+    opened: number;
+    clicked: number;
+  };
+  createdAt: string;
 }
 
 export interface User {
@@ -128,8 +191,288 @@ export const initialMessages: { [clientId: string]: Message[] } = {
 };
 
 export const initialCampaigns: Campaign[] = [
-  { id: '1', channel: 'email', message: '🎄 Season\'s Greetings from Toby Clinic! Wishing you and your furry friends a wonderful holiday season. Don\'t forget to schedule your pet\'s annual check-up!', recipients: 120, sentAt: '2025-12-01T10:00:00' },
-  { id: '2', channel: 'whatsapp', message: '🐕 Reminder: January is Dental Health Month! Book your pet\'s dental cleaning this month and get 15% off. Reply YES to schedule.', recipients: 85, sentAt: '2025-12-15T09:00:00' },
+  { 
+    id: '1', 
+    channel: 'email', 
+    subject: 'Season\'s Greetings from Toby Clinic! 🎄',
+    message: '🎄 Season\'s Greetings from Toby Clinic! Wishing you and your furry friends a wonderful holiday season. Don\'t forget to schedule your pet\'s annual check-up!', 
+    recipients: 120, 
+    sentAt: '2025-12-01T10:00:00',
+    status: 'sent',
+    tags: ['holiday', 'greeting'],
+    stats: { delivered: 118, opened: 72, clicked: 28, bounced: 2 }
+  },
+  { 
+    id: '2', 
+    channel: 'whatsapp', 
+    message: '🐕 Reminder: January is Dental Health Month! Book your pet\'s dental cleaning this month and get 15% off. Reply YES to schedule.', 
+    recipients: 85, 
+    sentAt: '2025-12-15T09:00:00',
+    status: 'sent',
+    tags: ['promotion', 'dental'],
+    stats: { delivered: 85, opened: 0, clicked: 0, bounced: 0 }
+  },
+  { 
+    id: '3', 
+    channel: 'email', 
+    subject: 'Your Pet\'s Vaccination Reminder 💉',
+    message: 'Hi {{client_name}}, this is a friendly reminder that {{pet_name}} is due for their vaccination. Schedule an appointment today to keep your furry friend healthy!', 
+    recipients: 45, 
+    sentAt: '2025-11-20T14:00:00',
+    segmentId: 'seg-2',
+    segmentName: 'Vaccination Due',
+    status: 'sent',
+    tags: ['reminder', 'vaccination'],
+    stats: { delivered: 44, opened: 38, clicked: 22, bounced: 1 }
+  },
+  { 
+    id: '4', 
+    channel: 'email', 
+    subject: 'We Miss You! Come Back for a Check-up 🐾',
+    message: 'Hi {{client_name}}, it\'s been a while since we\'ve seen {{pet_name}}! Schedule a wellness check-up today and get 10% off your visit.', 
+    recipients: 32, 
+    sentAt: '2025-11-10T10:00:00',
+    segmentId: 'seg-3',
+    segmentName: 'Inactive Clients',
+    status: 'sent',
+    tags: ['reengagement', 'promotion'],
+    stats: { delivered: 30, opened: 18, clicked: 8, bounced: 2 }
+  },
+  { 
+    id: '5', 
+    channel: 'email', 
+    subject: 'Welcome to Toby Clinic! 🎉',
+    message: 'Welcome to the Toby family, {{client_name}}! We\'re thrilled to have you and {{pet_name}} as part of our community. Here\'s what you can expect from us...', 
+    recipients: 8, 
+    sentAt: '2025-12-20T09:00:00',
+    segmentId: 'seg-1',
+    segmentName: 'New Clients',
+    status: 'sent',
+    tags: ['welcome', 'onboarding'],
+    stats: { delivered: 8, opened: 7, clicked: 5, bounced: 0 }
+  },
+  { 
+    id: '6', 
+    channel: 'whatsapp', 
+    message: '🎂 Happy Birthday to {{pet_name}}! Wishing your furry friend a pawsome day. Stop by for a special birthday treat!', 
+    recipients: 12, 
+    sentAt: '2025-12-22T08:00:00',
+    status: 'sent',
+    tags: ['birthday', 'greeting'],
+    stats: { delivered: 12, opened: 0, clicked: 0, bounced: 0 }
+  },
+];
+
+export const initialSegments: Segment[] = [
+  {
+    id: 'seg-1',
+    name: 'New Clients (Last 30 Days)',
+    description: 'Clients who joined in the last 30 days',
+    filters: [{ field: 'createdAt', operator: 'daysAgo', value: 30 }],
+    clientCount: 2,
+    createdAt: '2025-01-01T00:00:00',
+    isSystem: true,
+  },
+  {
+    id: 'seg-2',
+    name: 'Vaccination Due',
+    description: 'Pets with vaccinations due soon',
+    filters: [{ field: 'all', operator: 'equals', value: 'vaccination_due' }],
+    clientCount: 3,
+    createdAt: '2025-01-01T00:00:00',
+    isSystem: true,
+  },
+  {
+    id: 'seg-3',
+    name: 'Inactive Clients (90+ Days)',
+    description: 'Clients with no visit in the last 90 days',
+    filters: [{ field: 'lastVisit', operator: 'daysAgo', value: 90 }],
+    clientCount: 2,
+    createdAt: '2025-01-01T00:00:00',
+    isSystem: true,
+  },
+  {
+    id: 'seg-4',
+    name: 'Dog Owners',
+    description: 'All clients with at least one dog',
+    filters: [{ field: 'species', operator: 'equals', value: 'Dog' }],
+    clientCount: 4,
+    createdAt: '2025-01-01T00:00:00',
+    isSystem: true,
+  },
+  {
+    id: 'seg-5',
+    name: 'Cat Owners',
+    description: 'All clients with at least one cat',
+    filters: [{ field: 'species', operator: 'equals', value: 'Cat' }],
+    clientCount: 4,
+    createdAt: '2025-01-01T00:00:00',
+    isSystem: true,
+  },
+  {
+    id: 'seg-6',
+    name: 'Multiple Pet Owners',
+    description: 'Clients with 2 or more pets',
+    filters: [{ field: 'petCount', operator: 'greaterThan', value: 1 }],
+    clientCount: 3,
+    createdAt: '2025-01-01T00:00:00',
+    isSystem: true,
+  },
+];
+
+export const initialTemplates: Template[] = [
+  {
+    id: 'tpl-1',
+    name: 'Appointment Reminder (24h)',
+    channel: 'both',
+    subject: 'Reminder: {{pet_name}}\'s Appointment Tomorrow',
+    content: 'Hi {{client_name}}, this is a reminder that {{pet_name}} has an appointment tomorrow at {{appointment_time}}. Please arrive 10 minutes early. See you soon!',
+    category: 'reminder',
+    tags: ['appointment', 'reminder'],
+    createdAt: '2025-01-01T00:00:00',
+    isSystem: true,
+  },
+  {
+    id: 'tpl-2',
+    name: 'Vaccination Due Notice',
+    channel: 'email',
+    subject: '{{pet_name}}\'s Vaccination is Due 💉',
+    content: 'Hi {{client_name}},\n\nThis is a friendly reminder that {{pet_name}} is due for their vaccination. Keeping vaccinations up to date is essential for your pet\'s health.\n\nSchedule an appointment today!\n\nBest regards,\nThe Toby Clinic Team',
+    category: 'reminder',
+    tags: ['vaccination', 'health'],
+    createdAt: '2025-01-01T00:00:00',
+    isSystem: true,
+  },
+  {
+    id: 'tpl-3',
+    name: 'Welcome New Client',
+    channel: 'email',
+    subject: 'Welcome to Toby Clinic! 🎉',
+    content: 'Welcome to the Toby family, {{client_name}}!\n\nWe\'re thrilled to have you and {{pet_name}} as part of our community. At Toby Clinic, we\'re committed to providing the best care for your furry family members.\n\nHere\'s what you can expect:\n• Compassionate, expert care\n• Easy online booking\n• 24/7 emergency support\n\nIf you have any questions, don\'t hesitate to reach out!\n\nWarm regards,\nThe Toby Clinic Team',
+    category: 'greeting',
+    tags: ['welcome', 'onboarding'],
+    createdAt: '2025-01-01T00:00:00',
+    isSystem: true,
+  },
+  {
+    id: 'tpl-4',
+    name: 'Re-engagement (Inactive)',
+    channel: 'email',
+    subject: 'We Miss You! 🐾',
+    content: 'Hi {{client_name}},\n\nIt\'s been a while since we\'ve seen {{pet_name}} at Toby Clinic, and we miss you!\n\nRegular check-ups are important for your pet\'s health. Schedule a wellness visit today and receive 10% off your appointment.\n\nWe look forward to seeing you soon!\n\nBest,\nThe Toby Clinic Team',
+    category: 'reengagement',
+    tags: ['reengagement', 'promotion'],
+    createdAt: '2025-01-01T00:00:00',
+    isSystem: true,
+  },
+  {
+    id: 'tpl-5',
+    name: 'Happy Birthday',
+    channel: 'whatsapp',
+    content: '🎂 Happy Birthday to {{pet_name}}! 🎉\n\nWishing your furry friend a pawsome day filled with treats and belly rubs!\n\nStop by the clinic for a special birthday treat! 🦴',
+    category: 'greeting',
+    tags: ['birthday', 'greeting'],
+    createdAt: '2025-01-01T00:00:00',
+    isSystem: true,
+  },
+  {
+    id: 'tpl-6',
+    name: 'Post-Visit Follow-up',
+    channel: 'email',
+    subject: 'How is {{pet_name}} Doing?',
+    content: 'Hi {{client_name}},\n\nWe hope {{pet_name}} is feeling great after their recent visit!\n\nIf you have any questions about the treatment or notice anything unusual, please don\'t hesitate to contact us.\n\nThank you for trusting us with {{pet_name}}\'s care.\n\nBest regards,\nThe Toby Clinic Team',
+    category: 'followup',
+    tags: ['followup', 'care'],
+    createdAt: '2025-01-01T00:00:00',
+    isSystem: true,
+  },
+  {
+    id: 'tpl-7',
+    name: 'Dental Month Promotion',
+    channel: 'both',
+    subject: 'January is Dental Health Month! 🦷',
+    content: '🦷 January is Dental Health Month!\n\nDid you know that dental disease affects 80% of dogs and 70% of cats by age 3?\n\nBook {{pet_name}}\'s dental cleaning this month and get 15% off!\n\nHealthy teeth = Happy pet! 😊',
+    category: 'promotion',
+    tags: ['dental', 'promotion', 'health'],
+    createdAt: '2025-01-01T00:00:00',
+    isSystem: true,
+  },
+];
+
+export const initialWorkflows: Workflow[] = [
+  {
+    id: 'wf-1',
+    name: 'Appointment Reminder',
+    description: 'Send reminder 24 hours before scheduled appointments',
+    trigger: { type: 'days_before_appointment', value: 1 },
+    actions: [
+      { type: 'send_email', templateId: 'tpl-1' },
+      { type: 'send_whatsapp', templateId: 'tpl-1' },
+    ],
+    status: 'active',
+    stats: { sent: 156, opened: 142, clicked: 89 },
+    createdAt: '2025-01-01T00:00:00',
+  },
+  {
+    id: 'wf-2',
+    name: 'New Client Welcome',
+    description: 'Welcome email sent to new clients after registration',
+    trigger: { type: 'new_client' },
+    actions: [
+      { type: 'send_email', templateId: 'tpl-3' },
+    ],
+    status: 'active',
+    stats: { sent: 24, opened: 22, clicked: 18 },
+    createdAt: '2025-01-01T00:00:00',
+  },
+  {
+    id: 'wf-3',
+    name: 'Vaccination Reminder',
+    description: 'Remind clients when pet vaccinations are due',
+    trigger: { type: 'vaccination_due', value: 14 },
+    actions: [
+      { type: 'send_email', templateId: 'tpl-2' },
+    ],
+    status: 'active',
+    stats: { sent: 67, opened: 58, clicked: 34 },
+    createdAt: '2025-01-01T00:00:00',
+  },
+  {
+    id: 'wf-4',
+    name: 'Post-Visit Follow-up',
+    description: 'Check in with clients 3 days after their visit',
+    trigger: { type: 'days_after_visit', value: 3 },
+    actions: [
+      { type: 'send_email', templateId: 'tpl-6' },
+    ],
+    status: 'active',
+    stats: { sent: 89, opened: 71, clicked: 12 },
+    createdAt: '2025-01-01T00:00:00',
+  },
+  {
+    id: 'wf-5',
+    name: 'Re-engagement Campaign',
+    description: 'Reach out to clients inactive for 90+ days',
+    trigger: { type: 'inactive_client', value: 90 },
+    actions: [
+      { type: 'send_email', templateId: 'tpl-4' },
+    ],
+    status: 'paused',
+    stats: { sent: 32, opened: 18, clicked: 8 },
+    createdAt: '2025-01-01T00:00:00',
+  },
+  {
+    id: 'wf-6',
+    name: 'Pet Birthday Wishes',
+    description: 'Send birthday greetings on pet birthdays',
+    trigger: { type: 'pet_birthday' },
+    actions: [
+      { type: 'send_whatsapp', templateId: 'tpl-5' },
+    ],
+    status: 'active',
+    stats: { sent: 45, opened: 0, clicked: 0 },
+    createdAt: '2025-01-01T00:00:00',
+  },
 ];
 
 export const initialUsers: User[] = [
