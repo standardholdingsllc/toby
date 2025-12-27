@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32">
+  <!-- Toby Veterinary Clinic Logo -->
+  <circle cx="16" cy="16" r="15" fill="#2563eb" stroke="#1e40af" stroke-width="1"/>
+  <text x="16" y="20" font-family="Arial, sans-serif" font-size="14" font-weight="bold" text-anchor="middle" fill="white">T</text>
+  <!-- Paw print elements -->
+  <circle cx="10" cy="10" r="2" fill="white"/>
+  <circle cx="22" cy="10" r="2" fill="white"/>
+  <circle cx="13" cy="13" r="1.5" fill="white"/>
+  <circle cx="19" cy="13" r="1.5" fill="white"/>
+  <ellipse cx="16" cy="18" rx="3" ry="2" fill="white"/>
+</svg>
