@@ -185,6 +185,54 @@ export default function FinancePage() {
     return filtered.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
   }, [financeRecords, activeTab, searchQuery, statusFilter]);
 
+  // CSV Export function
+  const exportToCSV = () => {
+    const headers = [
+      'Date',
+      'Type',
+      'Invoice/Receipt #',
+      'Client',
+      'Pet',
+      'Description',
+      'Amount (S/)',
+      'Status',
+      'Payment Method',
+      'Notes'
+    ];
+    
+    const rows = filteredRecords.map(record => [
+      record.date,
+      record.type,
+      record.invoiceNumber || record.receiptNumber || '',
+      record.clientName,
+      record.petName || '',
+      record.description,
+      record.amount.toString(),
+      record.status,
+      record.paymentMethod || '',
+      record.notes || ''
+    ]);
+    
+    // Create CSV content
+    const csvContent = [
+      headers.join(','),
+      ...rows.map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(','))
+    ].join('\n');
+    
+    // Create blob and download
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `finance_export_${new Date().toISOString().split('T')[0]}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    showToast(t('exportSuccess'), 'success');
+  };
+
   // Chart data
   const revenueChartData = {
     labels: monthlyFinanceSummary.map(d => d.month),
@@ -671,6 +719,13 @@ export default function FinancePage() {
             {t('financeOverview')}
           </p>
         </div>
+        <button
+          onClick={exportToCSV}
+          className="btn-secondary flex items-center gap-2"
+        >
+          <ArrowDownTrayIcon className="w-5 h-5" />
+          {t('exportCSV')}
+        </button>
       </div>
 
       {/* Tabs */}

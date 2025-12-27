@@ -18,16 +18,16 @@ export const UsersIcon: React.FC<IconProps> = ({ className = 'w-6 h-6' }) => (
 
 export const PetIcon: React.FC<IconProps> = ({ className = 'w-6 h-6' }) => (
   <svg className={className} fill="currentColor" viewBox="0 0 24 24">
-    {/* Paw print icon - main pad */}
-    <ellipse cx="12" cy="17" rx="4" ry="3.5" />
-    {/* Top left toe */}
-    <ellipse cx="6.5" cy="10" rx="2" ry="2.5" />
-    {/* Top right toe */}
-    <ellipse cx="17.5" cy="10" rx="2" ry="2.5" />
-    {/* Middle left toe */}
-    <ellipse cx="8.5" cy="5.5" rx="1.8" ry="2.2" />
-    {/* Middle right toe */}
-    <ellipse cx="15.5" cy="5.5" rx="1.8" ry="2.2" />
+    {/* Traditional paw print - main pad (heart-shaped) */}
+    <path d="M12 21c-1.5 0-2.8-.5-3.8-1.3-1-.8-1.7-1.9-2-3.2-.3-1.2-.2-2.5.3-3.7.5-1.2 1.3-2.2 2.3-2.8.5-.3 1-.5 1.5-.6.5-.1 1-.1 1.5 0h.4c.5.1 1 .3 1.5.6 1 .6 1.8 1.6 2.3 2.8.5 1.2.6 2.5.3 3.7-.3 1.3-1 2.4-2 3.2-1 .8-2.3 1.3-3.8 1.3h-.5z" />
+    {/* Top left toe pad */}
+    <ellipse cx="6" cy="9.5" rx="2.2" ry="2.8" />
+    {/* Top right toe pad */}
+    <ellipse cx="18" cy="9.5" rx="2.2" ry="2.8" />
+    {/* Inner left toe pad */}
+    <ellipse cx="9" cy="5" rx="2" ry="2.5" />
+    {/* Inner right toe pad */}
+    <ellipse cx="15" cy="5" rx="2" ry="2.5" />
   </svg>
 );
 

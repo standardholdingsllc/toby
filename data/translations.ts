@@ -281,6 +281,11 @@ export const translations = {
     pendingPayments: 'Pending Payments',
     overduePayments: 'Overdue Payments',
     paidInvoices: 'Paid Invoices',
+    clickToView: 'Click to view',
+    records: 'records',
+    totalAmount: 'Total Amount',
+    goToFinance: 'Go to Finance',
+    call: 'Call',
     appointmentsByType: 'Appointments by Type',
     updatedJustNow: 'Updated just now',
     refresh: 'Refresh',
@@ -381,6 +386,8 @@ export const translations = {
     totalRevenue: 'Total Revenue',
     recentTransactions: 'Recent Transactions',
     paymentMethods: 'Payment Methods',
+    exportCSV: 'Export CSV',
+    exportSuccess: 'Export completed successfully!',
     revenueByMonth: 'Revenue by Month',
     
     // Custom Properties
@@ -394,6 +401,8 @@ export const translations = {
     dateType: 'Date',
     selectType: 'Select',
     noCustomProperties: 'No custom properties yet',
+    existingProperties: 'Existing properties',
+    uses: 'uses',
     
     // Automation Builder
     createAutomation: 'Create Automation',
@@ -719,6 +728,11 @@ export const translations = {
     pendingPayments: 'Pagos Pendientes',
     overduePayments: 'Pagos Vencidos',
     paidInvoices: 'Facturas Pagadas',
+    clickToView: 'Clic para ver',
+    records: 'registros',
+    totalAmount: 'Monto Total',
+    goToFinance: 'Ir a Finanzas',
+    call: 'Llamar',
     appointmentsByType: 'Citas por Tipo',
     updatedJustNow: 'Actualizado ahora',
     refresh: 'Actualizar',
@@ -819,6 +833,8 @@ export const translations = {
     totalRevenue: 'Ingresos Totales',
     recentTransactions: 'Transacciones Recientes',
     paymentMethods: 'Métodos de Pago',
+    exportCSV: 'Exportar CSV',
+    exportSuccess: '¡Exportación completada exitosamente!',
     revenueByMonth: 'Ingresos por Mes',
     
     // Custom Properties
@@ -832,6 +848,8 @@ export const translations = {
     dateType: 'Fecha',
     selectType: 'Selección',
     noCustomProperties: 'Sin propiedades personalizadas',
+    existingProperties: 'Propiedades existentes',
+    uses: 'usos',
     
     // Automation Builder
     createAutomation: 'Crear Automatización',

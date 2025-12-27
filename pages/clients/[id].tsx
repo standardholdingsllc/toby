@@ -231,18 +231,30 @@ const AddPetForm: React.FC<{
 export default function ClientDetailPage() {
   const router = useRouter();
   const { id } = router.query;
-  const { t, clients, pets, appointments, updateClient, addPet, messages, addMessage, showToast, addClientCustomProperty, removeClientCustomProperty } = useApp();
+  const { t, clients, pets, appointments, updateClient, addPet, messages, addMessage, showToast, addClientCustomProperty, removeClientCustomProperty, getAllPropertyNames } = useApp();
   
   const [showEditModal, setShowEditModal] = useState(false);
   const [showAddPetModal, setShowAddPetModal] = useState(false);
   const [showCallModal, setShowCallModal] = useState(false);
   const [callStatus, setCallStatus] = useState<'calling' | 'ended'>('calling');
   const [showAddPropertyModal, setShowAddPropertyModal] = useState(false);
+  const [showPropertySuggestions, setShowPropertySuggestions] = useState(false);
   const [newProperty, setNewProperty] = useState<Omit<CustomProperty, 'id'>>({
     name: '',
     value: '',
     type: 'text',
   });
+
+  // Get existing property names for suggestions
+  const existingPropertyNames = useMemo(() => getAllPropertyNames(), [getAllPropertyNames]);
+  
+  // Filter suggestions based on input
+  const filteredSuggestions = useMemo(() => {
+    if (!newProperty.name) return existingPropertyNames.slice(0, 5);
+    return existingPropertyNames.filter(p => 
+      p.name.toLowerCase().includes(newProperty.name.toLowerCase())
+    ).slice(0, 5);
+  }, [newProperty.name, existingPropertyNames]);
 
   const client = clients.find((c) => c.id === id);
   const clientPets = pets.filter((p) => p.ownerId === id);
@@ -589,13 +601,14 @@ export default function ClientDetailPage() {
         isOpen={showAddPropertyModal}
         onClose={() => {
           setShowAddPropertyModal(false);
+          setShowPropertySuggestions(false);
           setNewProperty({ name: '', value: '', type: 'text' });
         }}
         title={t('addProperty')}
         size="sm"
       >
         <div className="space-y-4">
-          <div>
+          <div className="relative">
             <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
               {t('propertyName')} *
             </label>
@@ -603,9 +616,39 @@ export default function ClientDetailPage() {
               type="text"
               value={newProperty.name}
               onChange={(e) => setNewProperty(prev => ({ ...prev, name: e.target.value }))}
+              onFocus={() => setShowPropertySuggestions(true)}
+              onBlur={() => setTimeout(() => setShowPropertySuggestions(false), 200)}
               className="input-field"
               placeholder="e.g., Company Name, Referral Source..."
             />
+            {/* Property suggestions dropdown */}
+            {showPropertySuggestions && filteredSuggestions.length > 0 && (
+              <div className="absolute z-10 w-full mt-1 bg-white dark:bg-slate-800 rounded-xl shadow-lg border border-slate-200 dark:border-slate-700 max-h-48 overflow-y-auto">
+                <div className="p-2 text-xs text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-700">
+                  {t('existingProperties')}
+                </div>
+                {filteredSuggestions.map((suggestion) => (
+                  <button
+                    key={suggestion.name}
+                    type="button"
+                    onClick={() => {
+                      setNewProperty(prev => ({ 
+                        ...prev, 
+                        name: suggestion.name,
+                        type: suggestion.type 
+                      }));
+                      setShowPropertySuggestions(false);
+                    }}
+                    className="w-full px-3 py-2 text-left hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center justify-between"
+                  >
+                    <span className="text-slate-800 dark:text-white">{suggestion.name}</span>
+                    <span className="text-xs text-slate-500 dark:text-slate-400">
+                      {suggestion.count} {t('uses')}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
           
           <div>

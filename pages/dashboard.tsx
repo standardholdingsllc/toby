@@ -1,6 +1,7 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useApp } from '@/context/AppContext';
+import Modal from '@/components/Modal';
 import {
   DollarIcon,
   CalendarIcon,
@@ -11,8 +12,12 @@ import {
   BanknotesIcon,
   ReceiptIcon,
   ExclamationTriangleIcon,
+  XIcon,
+  PhoneIcon,
+  EmailIcon,
+  WhatsAppIcon,
 } from '@/components/icons/Icons';
-import { revenueData, appointmentsByMonth, appointmentsByType, monthlyFinanceSummary } from '@/data/mockData';
+import { revenueData, appointmentsByMonth, appointmentsByType, monthlyFinanceSummary, FinanceRecord } from '@/data/mockData';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -70,6 +75,29 @@ const StatCard: React.FC<{
 
 export default function DashboardPage() {
   const { t, clients, pets, appointments, financeRecords } = useApp();
+  const [showOverdueModal, setShowOverdueModal] = useState(false);
+  const [showPendingModal, setShowPendingModal] = useState(false);
+
+  // Get overdue and pending records with client details
+  const overdueRecords = useMemo(() => {
+    return financeRecords
+      .filter(r => r.status === 'overdue')
+      .map(record => {
+        const client = clients.find(c => c.id === record.clientId);
+        const pet = pets.find(p => p.id === record.petId);
+        return { ...record, client, pet };
+      });
+  }, [financeRecords, clients, pets]);
+
+  const pendingRecords = useMemo(() => {
+    return financeRecords
+      .filter(r => r.status === 'pending')
+      .map(record => {
+        const client = clients.find(c => c.id === record.clientId);
+        const pet = pets.find(p => p.id === record.petId);
+        return { ...record, client, pet };
+      });
+  }, [financeRecords, clients, pets]);
 
   // Calculate stats
   const stats = useMemo(() => {
@@ -300,7 +328,10 @@ export default function DashboardPage() {
       {/* Finance Summary Cards */}
       {(stats.pendingAmount > 0 || stats.overdueAmount > 0) && (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
-          <Link href="/finance" className="card hover:shadow-lg transition-shadow cursor-pointer border-l-4 border-amber-500">
+          <button 
+            onClick={() => setShowPendingModal(true)}
+            className="card hover:shadow-lg transition-shadow cursor-pointer border-l-4 border-amber-500 text-left"
+          >
             <div className="flex items-center gap-4">
               <div className="w-12 h-12 rounded-2xl flex items-center justify-center bg-amber-100 dark:bg-amber-900/30">
                 <BanknotesIcon className="w-6 h-6 text-amber-600 dark:text-amber-400" />
@@ -310,12 +341,18 @@ export default function DashboardPage() {
                   S/ {stats.pendingAmount.toLocaleString()}
                 </p>
                 <p className="text-sm text-slate-500 dark:text-slate-400">{t('pendingPayments')}</p>
+                <p className="text-xs text-amber-600 dark:text-amber-400 mt-1">
+                  {pendingRecords.length} {t('records')} → {t('clickToView')}
+                </p>
               </div>
             </div>
-          </Link>
+          </button>
           
           {stats.overdueAmount > 0 && (
-            <Link href="/finance" className="card hover:shadow-lg transition-shadow cursor-pointer border-l-4 border-red-500">
+            <button 
+              onClick={() => setShowOverdueModal(true)}
+              className="card hover:shadow-lg transition-shadow cursor-pointer border-l-4 border-red-500 text-left"
+            >
               <div className="flex items-center gap-4">
                 <div className="w-12 h-12 rounded-2xl flex items-center justify-center bg-red-100 dark:bg-red-900/30">
                   <ExclamationTriangleIcon className="w-6 h-6 text-red-600 dark:text-red-400" />
@@ -325,9 +362,12 @@ export default function DashboardPage() {
                     S/ {stats.overdueAmount.toLocaleString()}
                   </p>
                   <p className="text-sm text-slate-500 dark:text-slate-400">{t('overduePayments')}</p>
+                  <p className="text-xs text-red-600 dark:text-red-400 mt-1">
+                    {overdueRecords.length} {t('records')} → {t('clickToView')}
+                  </p>
                 </div>
               </div>
-            </Link>
+            </button>
           )}
           
           <Link href="/finance" className="card hover:shadow-lg transition-shadow cursor-pointer border-l-4 border-primary-500">
@@ -435,6 +475,180 @@ export default function DashboardPage() {
           </div>
         </div>
       </div>
+
+      {/* Overdue Payments Modal */}
+      <Modal isOpen={showOverdueModal} onClose={() => setShowOverdueModal(false)} title={t('overduePayments')}>
+        <div className="space-y-4">
+          <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-4 mb-4">
+            <div className="flex items-center gap-2 text-red-700 dark:text-red-400">
+              <ExclamationTriangleIcon className="w-5 h-5" />
+              <span className="font-medium">{overdueRecords.length} {t('overduePayments')}</span>
+            </div>
+            <p className="text-sm text-red-600 dark:text-red-400 mt-1">
+              {t('totalAmount')}: S/ {stats.overdueAmount.toLocaleString()}
+            </p>
+          </div>
+          
+          {overdueRecords.map((record) => (
+            <div key={record.id} className="bg-slate-50 dark:bg-slate-700/50 rounded-xl p-4">
+              <div className="flex items-start justify-between mb-3">
+                <div>
+                  <Link 
+                    href={`/clients/${record.clientId}`}
+                    className="font-semibold text-slate-800 dark:text-white hover:text-primary-500 transition-colors"
+                  >
+                    {record.client?.name || 'Unknown Client'}
+                  </Link>
+                  <p className="text-sm text-slate-500 dark:text-slate-400">
+                    {record.pet?.name && `${record.pet.name} · `}{record.description}
+                  </p>
+                </div>
+                <div className="text-right">
+                  <p className="font-bold text-red-600 dark:text-red-400">S/ {record.amount.toLocaleString()}</p>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">{record.date}</p>
+                </div>
+              </div>
+              
+              <div className="flex items-center gap-2 mt-3">
+                {record.client?.phone && (
+                  <>
+                    <a
+                      href={`tel:${record.client.phone}`}
+                      className="flex items-center gap-1 px-3 py-1.5 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 rounded-lg text-sm hover:bg-blue-200 dark:hover:bg-blue-900/50 transition-colors"
+                    >
+                      <PhoneIcon className="w-4 h-4" />
+                      {t('call')}
+                    </a>
+                    <a
+                      href={`https://wa.me/${record.client.phone.replace(/\D/g, '')}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-1 px-3 py-1.5 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded-lg text-sm hover:bg-green-200 dark:hover:bg-green-900/50 transition-colors"
+                    >
+                      <WhatsAppIcon className="w-4 h-4" />
+                      WhatsApp
+                    </a>
+                  </>
+                )}
+                {record.client?.email && (
+                  <a
+                    href={`mailto:${record.client.email}?subject=Payment Reminder - ${record.receiptNumber || record.id}`}
+                    className="flex items-center gap-1 px-3 py-1.5 bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400 rounded-lg text-sm hover:bg-purple-200 dark:hover:bg-purple-900/50 transition-colors"
+                  >
+                    <EmailIcon className="w-4 h-4" />
+                    {t('email')}
+                  </a>
+                )}
+                <Link
+                  href="/finance"
+                  className="flex items-center gap-1 px-3 py-1.5 bg-slate-200 dark:bg-slate-600 text-slate-700 dark:text-slate-300 rounded-lg text-sm hover:bg-slate-300 dark:hover:bg-slate-500 transition-colors ml-auto"
+                >
+                  {t('viewDetails')}
+                </Link>
+              </div>
+            </div>
+          ))}
+          
+          <div className="flex justify-end gap-3 mt-6">
+            <button
+              onClick={() => setShowOverdueModal(false)}
+              className="btn-secondary"
+            >
+              {t('close')}
+            </button>
+            <Link href="/finance" className="btn-primary">
+              {t('goToFinance')}
+            </Link>
+          </div>
+        </div>
+      </Modal>
+
+      {/* Pending Payments Modal */}
+      <Modal isOpen={showPendingModal} onClose={() => setShowPendingModal(false)} title={t('pendingPayments')}>
+        <div className="space-y-4">
+          <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-xl p-4 mb-4">
+            <div className="flex items-center gap-2 text-amber-700 dark:text-amber-400">
+              <BanknotesIcon className="w-5 h-5" />
+              <span className="font-medium">{pendingRecords.length} {t('pendingPayments')}</span>
+            </div>
+            <p className="text-sm text-amber-600 dark:text-amber-400 mt-1">
+              {t('totalAmount')}: S/ {stats.pendingAmount.toLocaleString()}
+            </p>
+          </div>
+          
+          {pendingRecords.map((record) => (
+            <div key={record.id} className="bg-slate-50 dark:bg-slate-700/50 rounded-xl p-4">
+              <div className="flex items-start justify-between mb-3">
+                <div>
+                  <Link 
+                    href={`/clients/${record.clientId}`}
+                    className="font-semibold text-slate-800 dark:text-white hover:text-primary-500 transition-colors"
+                  >
+                    {record.client?.name || 'Unknown Client'}
+                  </Link>
+                  <p className="text-sm text-slate-500 dark:text-slate-400">
+                    {record.pet?.name && `${record.pet.name} · `}{record.description}
+                  </p>
+                </div>
+                <div className="text-right">
+                  <p className="font-bold text-amber-600 dark:text-amber-400">S/ {record.amount.toLocaleString()}</p>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">{record.date}</p>
+                </div>
+              </div>
+              
+              <div className="flex items-center gap-2 mt-3">
+                {record.client?.phone && (
+                  <>
+                    <a
+                      href={`tel:${record.client.phone}`}
+                      className="flex items-center gap-1 px-3 py-1.5 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 rounded-lg text-sm hover:bg-blue-200 dark:hover:bg-blue-900/50 transition-colors"
+                    >
+                      <PhoneIcon className="w-4 h-4" />
+                      {t('call')}
+                    </a>
+                    <a
+                      href={`https://wa.me/${record.client.phone.replace(/\D/g, '')}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-1 px-3 py-1.5 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded-lg text-sm hover:bg-green-200 dark:hover:bg-green-900/50 transition-colors"
+                    >
+                      <WhatsAppIcon className="w-4 h-4" />
+                      WhatsApp
+                    </a>
+                  </>
+                )}
+                {record.client?.email && (
+                  <a
+                    href={`mailto:${record.client.email}?subject=Payment Reminder - ${record.receiptNumber || record.id}`}
+                    className="flex items-center gap-1 px-3 py-1.5 bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400 rounded-lg text-sm hover:bg-purple-200 dark:hover:bg-purple-900/50 transition-colors"
+                  >
+                    <EmailIcon className="w-4 h-4" />
+                    {t('email')}
+                  </a>
+                )}
+                <Link
+                  href="/finance"
+                  className="flex items-center gap-1 px-3 py-1.5 bg-slate-200 dark:bg-slate-600 text-slate-700 dark:text-slate-300 rounded-lg text-sm hover:bg-slate-300 dark:hover:bg-slate-500 transition-colors ml-auto"
+                >
+                  {t('viewDetails')}
+                </Link>
+              </div>
+            </div>
+          ))}
+          
+          <div className="flex justify-end gap-3 mt-6">
+            <button
+              onClick={() => setShowPendingModal(false)}
+              className="btn-secondary"
+            >
+              {t('close')}
+            </button>
+            <Link href="/finance" className="btn-primary">
+              {t('goToFinance')}
+            </Link>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 }

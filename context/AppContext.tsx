@@ -89,6 +89,7 @@ interface AppContextType {
   addPetCustomProperty: (petId: string, property: Omit<CustomProperty, 'id'>) => void;
   updatePetCustomProperty: (petId: string, propertyId: string, data: Partial<CustomProperty>) => void;
   removePetCustomProperty: (petId: string, propertyId: string) => void;
+  getAllPropertyNames: () => { name: string; type: 'text' | 'number' | 'date' | 'boolean'; count: number }[];
   
   // Toast notifications
   toasts: Toast[];
@@ -391,6 +392,39 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         : p
     ));
   }, []);
+
+  // Get all unique property names from clients and pets
+  const getAllPropertyNames = useCallback(() => {
+    const propertyMap = new Map<string, { type: 'text' | 'number' | 'date' | 'boolean'; count: number }>();
+    
+    // Collect from clients
+    clients.forEach(client => {
+      (client.customProperties || []).forEach(prop => {
+        const existing = propertyMap.get(prop.name);
+        if (existing) {
+          propertyMap.set(prop.name, { ...existing, count: existing.count + 1 });
+        } else {
+          propertyMap.set(prop.name, { type: prop.type, count: 1 });
+        }
+      });
+    });
+    
+    // Collect from pets
+    pets.forEach(pet => {
+      (pet.customProperties || []).forEach(prop => {
+        const existing = propertyMap.get(prop.name);
+        if (existing) {
+          propertyMap.set(prop.name, { ...existing, count: existing.count + 1 });
+        } else {
+          propertyMap.set(prop.name, { type: prop.type, count: 1 });
+        }
+      });
+    });
+    
+    return Array.from(propertyMap.entries())
+      .map(([name, data]) => ({ name, ...data }))
+      .sort((a, b) => b.count - a.count);
+  }, [clients, pets]);
   
   const value: AppContextType = {
     language,
@@ -447,6 +481,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     addPetCustomProperty,
     updatePetCustomProperty,
     removePetCustomProperty,
+    getAllPropertyNames,
     toasts,
     showToast,
     removeToast,
