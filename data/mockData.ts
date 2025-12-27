@@ -1,5 +1,12 @@
 // Mock Data for VetCRM Demo
 
+export interface CustomProperty {
+  id: string;
+  name: string;
+  value: string;
+  type: 'text' | 'number' | 'date' | 'select';
+}
+
 export interface Client {
   id: string;
   name: string;
@@ -9,6 +16,7 @@ export interface Client {
   numberOfPets: number;
   createdAt: string;
   tags: string[];
+  customProperties?: CustomProperty[];
 }
 
 // Available client tag definitions (for UI)
@@ -42,6 +50,7 @@ export interface Pet {
   vaccinations: string;
   notes: string;
   passedAway?: boolean;
+  customProperties?: CustomProperty[];
 }
 
 export interface Appointment {
@@ -150,6 +159,69 @@ export interface MedicalRecord {
   date: string;
   description: string;
   veterinarian: string;
+}
+
+export interface FinanceRecord {
+  id: string;
+  type: 'payment' | 'invoice' | 'receipt';
+  clientId: string;
+  clientName: string;
+  petId?: string;
+  petName?: string;
+  appointmentId?: string;
+  amount: number;
+  description: string;
+  date: string;
+  status: 'paid' | 'pending' | 'overdue' | 'cancelled';
+  paymentMethod?: 'cash' | 'card' | 'transfer' | 'other';
+  invoiceNumber?: string;
+  receiptNumber?: string;
+  items?: FinanceItem[];
+  notes?: string;
+}
+
+export interface FinanceItem {
+  id: string;
+  description: string;
+  quantity: number;
+  unitPrice: number;
+  total: number;
+}
+
+export interface CustomWorkflow {
+  id: string;
+  name: string;
+  description: string;
+  trigger: {
+    type: 'days_before_appointment' | 'days_after_visit' | 'pet_birthday' | 'vaccination_due' | 'new_client' | 'inactive_client' | 'payment_received' | 'invoice_overdue';
+    value?: number;
+    conditions?: WorkflowCondition[];
+  };
+  actions: WorkflowAction[];
+  status: 'active' | 'paused' | 'draft';
+  stats: {
+    sent: number;
+    opened: number;
+    clicked: number;
+  };
+  createdAt: string;
+  isCustom: boolean;
+}
+
+export interface WorkflowCondition {
+  field: string;
+  operator: 'equals' | 'contains' | 'greaterThan' | 'lessThan';
+  value: string | number;
+}
+
+export interface WorkflowAction {
+  id: string;
+  type: 'send_email' | 'send_whatsapp' | 'wait' | 'add_tag' | 'remove_tag';
+  templateId?: string;
+  delayDays?: number;
+  tagId?: string;
+  customMessage?: string;
+  customSubject?: string;
 }
 
 // Initial Mock Data - 18 clients with varied tags
@@ -719,5 +791,274 @@ export const appointmentsByType = [
   { type: 'Surgery', count: 120, color: '#f59e0b' },
   { type: 'Grooming', count: 200, color: '#8b5cf6' },
   { type: 'Emergency', count: 85, color: '#ef4444' },
+];
+
+// Finance Data
+export const initialFinanceRecords: FinanceRecord[] = [
+  {
+    id: 'fin-1',
+    type: 'receipt',
+    clientId: '1',
+    clientName: 'María García',
+    petId: '1',
+    petName: 'Luna',
+    appointmentId: '10',
+    amount: 150,
+    description: 'Annual check-up and vaccination',
+    date: '2025-12-20',
+    status: 'paid',
+    paymentMethod: 'card',
+    receiptNumber: 'REC-2025-001',
+    items: [
+      { id: 'item-1', description: 'Annual Check-up', quantity: 1, unitPrice: 80, total: 80 },
+      { id: 'item-2', description: 'Rabies Vaccination', quantity: 1, unitPrice: 50, total: 50 },
+      { id: 'item-3', description: 'Deworming', quantity: 1, unitPrice: 20, total: 20 },
+    ],
+  },
+  {
+    id: 'fin-2',
+    type: 'invoice',
+    clientId: '3',
+    clientName: 'Ana Rodríguez',
+    petId: '5',
+    petName: 'Rocky',
+    appointmentId: '6',
+    amount: 450,
+    description: 'Dental cleaning under anesthesia',
+    date: '2025-12-30',
+    status: 'pending',
+    invoiceNumber: 'INV-2025-042',
+    items: [
+      { id: 'item-4', description: 'Dental Cleaning', quantity: 1, unitPrice: 300, total: 300 },
+      { id: 'item-5', description: 'Anesthesia', quantity: 1, unitPrice: 100, total: 100 },
+      { id: 'item-6', description: 'Post-op Medication', quantity: 1, unitPrice: 50, total: 50 },
+    ],
+  },
+  {
+    id: 'fin-3',
+    type: 'receipt',
+    clientId: '4',
+    clientName: 'Carlos Mendez',
+    petId: '7',
+    petName: 'Coco',
+    amount: 85,
+    description: 'Full grooming session',
+    date: '2025-12-15',
+    status: 'paid',
+    paymentMethod: 'cash',
+    receiptNumber: 'REC-2025-002',
+    items: [
+      { id: 'item-7', description: 'Full Grooming', quantity: 1, unitPrice: 70, total: 70 },
+      { id: 'item-8', description: 'Nail Trimming', quantity: 1, unitPrice: 15, total: 15 },
+    ],
+  },
+  {
+    id: 'fin-4',
+    type: 'invoice',
+    clientId: '2',
+    clientName: 'John Smith',
+    petId: '3',
+    petName: 'Buddy',
+    appointmentId: '2',
+    amount: 120,
+    description: 'Rabies booster vaccination',
+    date: '2025-12-27',
+    status: 'pending',
+    invoiceNumber: 'INV-2025-043',
+    items: [
+      { id: 'item-9', description: 'Consultation', quantity: 1, unitPrice: 50, total: 50 },
+      { id: 'item-10', description: 'Rabies Booster', quantity: 1, unitPrice: 70, total: 70 },
+    ],
+  },
+  {
+    id: 'fin-5',
+    type: 'receipt',
+    clientId: '5',
+    clientName: 'Sarah Johnson',
+    petId: '8',
+    petName: 'Oliver',
+    amount: 200,
+    description: 'Weight management consultation and diet food',
+    date: '2025-12-10',
+    status: 'paid',
+    paymentMethod: 'transfer',
+    receiptNumber: 'REC-2025-003',
+    items: [
+      { id: 'item-11', description: 'Consultation', quantity: 1, unitPrice: 80, total: 80 },
+      { id: 'item-12', description: 'Prescription Diet Food (5kg)', quantity: 1, unitPrice: 120, total: 120 },
+    ],
+  },
+  {
+    id: 'fin-6',
+    type: 'invoice',
+    clientId: '13',
+    clientName: 'Isabella Martinez',
+    petId: '21',
+    petName: 'Lola',
+    amount: 95,
+    description: 'Anxiety behavior assessment',
+    date: '2025-12-05',
+    status: 'overdue',
+    invoiceNumber: 'INV-2025-038',
+    items: [
+      { id: 'item-13', description: 'Behavioral Consultation', quantity: 1, unitPrice: 95, total: 95 },
+    ],
+    notes: 'Payment reminder sent on Dec 15',
+  },
+  {
+    id: 'fin-7',
+    type: 'receipt',
+    clientId: '7',
+    clientName: 'Emily Watson',
+    petId: '11',
+    petName: 'Daisy',
+    amount: 180,
+    description: 'New client wellness exam',
+    date: '2025-12-18',
+    status: 'paid',
+    paymentMethod: 'card',
+    receiptNumber: 'REC-2025-004',
+    items: [
+      { id: 'item-14', description: 'Comprehensive Wellness Exam', quantity: 1, unitPrice: 120, total: 120 },
+      { id: 'item-15', description: 'Blood Work', quantity: 1, unitPrice: 60, total: 60 },
+    ],
+  },
+  {
+    id: 'fin-8',
+    type: 'receipt',
+    clientId: '14',
+    clientName: 'William Brown',
+    petId: '22',
+    petName: 'Zeus',
+    amount: 350,
+    description: 'Show dog grooming and health certificate',
+    date: '2025-12-12',
+    status: 'paid',
+    paymentMethod: 'card',
+    receiptNumber: 'REC-2025-005',
+    items: [
+      { id: 'item-16', description: 'Show Grooming', quantity: 1, unitPrice: 200, total: 200 },
+      { id: 'item-17', description: 'Health Certificate', quantity: 1, unitPrice: 100, total: 100 },
+      { id: 'item-18', description: 'Nail Care', quantity: 1, unitPrice: 50, total: 50 },
+    ],
+  },
+  {
+    id: 'fin-9',
+    type: 'payment',
+    clientId: '10',
+    clientName: 'David Kim',
+    amount: 500,
+    description: 'Annual care package - 3 pets',
+    date: '2025-12-01',
+    status: 'paid',
+    paymentMethod: 'transfer',
+    receiptNumber: 'REC-2025-006',
+    items: [
+      { id: 'item-19', description: 'Annual Care Package (3 pets)', quantity: 1, unitPrice: 500, total: 500 },
+    ],
+  },
+  {
+    id: 'fin-10',
+    type: 'invoice',
+    clientId: '17',
+    clientName: 'Valentina Ruiz',
+    petId: '29',
+    petName: 'Rosie',
+    amount: 280,
+    description: 'Heart condition monitoring and medication',
+    date: '2025-12-22',
+    status: 'pending',
+    invoiceNumber: 'INV-2025-044',
+    items: [
+      { id: 'item-20', description: 'Cardiac Consultation', quantity: 1, unitPrice: 150, total: 150 },
+      { id: 'item-21', description: 'ECG', quantity: 1, unitPrice: 80, total: 80 },
+      { id: 'item-22', description: 'Heart Medication (30 days)', quantity: 1, unitPrice: 50, total: 50 },
+    ],
+  },
+  // Historical data for charts
+  {
+    id: 'fin-11',
+    type: 'receipt',
+    clientId: '1',
+    clientName: 'María García',
+    amount: 120,
+    description: 'Consultation',
+    date: '2025-11-15',
+    status: 'paid',
+    paymentMethod: 'cash',
+    receiptNumber: 'REC-2025-007',
+  },
+  {
+    id: 'fin-12',
+    type: 'receipt',
+    clientId: '8',
+    clientName: 'Miguel Torres',
+    amount: 250,
+    description: 'Breeding consultation',
+    date: '2025-11-20',
+    status: 'paid',
+    paymentMethod: 'card',
+    receiptNumber: 'REC-2025-008',
+  },
+  {
+    id: 'fin-13',
+    type: 'receipt',
+    clientId: '9',
+    clientName: 'Jennifer Lee',
+    amount: 180,
+    description: 'Senior pet check-up',
+    date: '2025-11-25',
+    status: 'paid',
+    paymentMethod: 'transfer',
+    receiptNumber: 'REC-2025-009',
+  },
+  {
+    id: 'fin-14',
+    type: 'receipt',
+    clientId: '12',
+    clientName: 'James Wilson',
+    amount: 95,
+    description: 'Ear infection treatment',
+    date: '2025-11-28',
+    status: 'paid',
+    paymentMethod: 'cash',
+    receiptNumber: 'REC-2025-010',
+  },
+  {
+    id: 'fin-15',
+    type: 'receipt',
+    clientId: '16',
+    clientName: 'Alexander Davis',
+    amount: 160,
+    description: 'Grooming and boarding',
+    date: '2025-11-30',
+    status: 'paid',
+    paymentMethod: 'card',
+    receiptNumber: 'REC-2025-011',
+  },
+];
+
+// Monthly finance summary for dashboard
+export const monthlyFinanceSummary = [
+  { month: 'Jan', revenue: 5200, expenses: 1800, profit: 3400 },
+  { month: 'Feb', revenue: 4800, expenses: 1650, profit: 3150 },
+  { month: 'Mar', revenue: 6100, expenses: 2100, profit: 4000 },
+  { month: 'Apr', revenue: 5500, expenses: 1900, profit: 3600 },
+  { month: 'May', revenue: 7200, expenses: 2400, profit: 4800 },
+  { month: 'Jun', revenue: 6800, expenses: 2200, profit: 4600 },
+  { month: 'Jul', revenue: 7500, expenses: 2500, profit: 5000 },
+  { month: 'Aug', revenue: 8100, expenses: 2700, profit: 5400 },
+  { month: 'Sep', revenue: 7300, expenses: 2400, profit: 4900 },
+  { month: 'Oct', revenue: 8500, expenses: 2800, profit: 5700 },
+  { month: 'Nov', revenue: 9200, expenses: 3000, profit: 6200 },
+  { month: 'Dec', revenue: 8500, expenses: 2900, profit: 5600 },
+];
+
+// Payment methods distribution
+export const paymentMethodsData = [
+  { method: 'Card', count: 45, amount: 12500, color: '#3b82f6' },
+  { method: 'Cash', count: 30, amount: 5800, color: '#22c55e' },
+  { method: 'Transfer', count: 20, amount: 8200, color: '#8b5cf6' },
+  { method: 'Other', count: 5, amount: 1000, color: '#f59e0b' },
 ];
 

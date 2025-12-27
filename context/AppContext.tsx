@@ -2,10 +2,10 @@ import React, { createContext, useContext, useState, useCallback, ReactNode } fr
 import { Language, translations, TranslationKey } from '@/data/translations';
 import {
   Client, Pet, Appointment, Message, Campaign, User, MedicalRecord,
-  Segment, Template, Workflow,
+  Segment, Template, Workflow, FinanceRecord, CustomProperty, CustomWorkflow,
   initialClients, initialPets, initialAppointments, initialMessages,
   initialCampaigns, initialUsers, initialMedicalRecords,
-  initialSegments, initialTemplates, initialWorkflows
+  initialSegments, initialTemplates, initialWorkflows, initialFinanceRecords
 } from '@/data/mockData';
 
 interface Toast {
@@ -65,6 +65,8 @@ interface AppContextType {
   workflows: Workflow[];
   setWorkflows: React.Dispatch<React.SetStateAction<Workflow[]>>;
   updateWorkflow: (id: string, data: Partial<Workflow>) => void;
+  addWorkflow: (workflow: Omit<Workflow, 'id' | 'createdAt' | 'stats'>) => void;
+  deleteWorkflow: (id: string) => void;
   
   users: User[];
   setUsers: React.Dispatch<React.SetStateAction<User[]>>;
@@ -72,6 +74,21 @@ interface AppContextType {
   removeUser: (id: string) => void;
   
   medicalRecords: MedicalRecord[];
+  
+  // Finance
+  financeRecords: FinanceRecord[];
+  setFinanceRecords: React.Dispatch<React.SetStateAction<FinanceRecord[]>>;
+  addFinanceRecord: (record: Omit<FinanceRecord, 'id'>) => void;
+  updateFinanceRecord: (id: string, data: Partial<FinanceRecord>) => void;
+  deleteFinanceRecord: (id: string) => void;
+  
+  // Custom Properties
+  addClientCustomProperty: (clientId: string, property: Omit<CustomProperty, 'id'>) => void;
+  updateClientCustomProperty: (clientId: string, propertyId: string, data: Partial<CustomProperty>) => void;
+  removeClientCustomProperty: (clientId: string, propertyId: string) => void;
+  addPetCustomProperty: (petId: string, property: Omit<CustomProperty, 'id'>) => void;
+  updatePetCustomProperty: (petId: string, propertyId: string, data: Partial<CustomProperty>) => void;
+  removePetCustomProperty: (petId: string, propertyId: string) => void;
   
   // Toast notifications
   toasts: Toast[];
@@ -102,6 +119,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const [workflows, setWorkflows] = useState<Workflow[]>(initialWorkflows);
   const [users, setUsers] = useState<User[]>(initialUsers);
   const [medicalRecords] = useState<MedicalRecord[]>(initialMedicalRecords);
+  const [financeRecords, setFinanceRecords] = useState<FinanceRecord[]>(initialFinanceRecords);
   
   // Toast state
   const [toasts, setToasts] = useState<Toast[]>([]);
@@ -254,6 +272,22 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     setWorkflows(prev => prev.map(w => w.id === id ? { ...w, ...data } : w));
   }, []);
   
+  const addWorkflow = useCallback((workflowData: Omit<Workflow, 'id' | 'createdAt' | 'stats'>) => {
+    const newWorkflow: Workflow = {
+      ...workflowData,
+      id: Date.now().toString(),
+      createdAt: new Date().toISOString(),
+      stats: { sent: 0, opened: 0, clicked: 0 },
+    };
+    setWorkflows(prev => [...prev, newWorkflow]);
+    showToast('Automation created successfully!');
+  }, [showToast]);
+  
+  const deleteWorkflow = useCallback((id: string) => {
+    setWorkflows(prev => prev.filter(w => w.id !== id));
+    showToast('Automation deleted');
+  }, [showToast]);
+  
   // User functions
   const addUser = useCallback((userData: Omit<User, 'id'>) => {
     const newUser: User = {
@@ -269,6 +303,94 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     setUsers(prev => prev.filter(u => u.id !== id));
     showToast(t('userRemoved'));
   }, [currentUser.id, showToast, t]);
+  
+  // Finance functions
+  const addFinanceRecord = useCallback((recordData: Omit<FinanceRecord, 'id'>) => {
+    const newRecord: FinanceRecord = {
+      ...recordData,
+      id: Date.now().toString(),
+    };
+    setFinanceRecords(prev => [newRecord, ...prev]);
+    showToast(t('recordAdded'));
+  }, [showToast, t]);
+  
+  const updateFinanceRecord = useCallback((id: string, data: Partial<FinanceRecord>) => {
+    setFinanceRecords(prev => prev.map(r => r.id === id ? { ...r, ...data } : r));
+    showToast(t('recordUpdated'));
+  }, [showToast, t]);
+  
+  const deleteFinanceRecord = useCallback((id: string) => {
+    setFinanceRecords(prev => prev.filter(r => r.id !== id));
+    showToast(t('recordDeleted'));
+  }, [showToast, t]);
+  
+  // Custom Property functions for Clients
+  const addClientCustomProperty = useCallback((clientId: string, property: Omit<CustomProperty, 'id'>) => {
+    const newProperty: CustomProperty = {
+      ...property,
+      id: Date.now().toString(),
+    };
+    setClients(prev => prev.map(c => 
+      c.id === clientId 
+        ? { ...c, customProperties: [...(c.customProperties || []), newProperty] }
+        : c
+    ));
+  }, []);
+  
+  const updateClientCustomProperty = useCallback((clientId: string, propertyId: string, data: Partial<CustomProperty>) => {
+    setClients(prev => prev.map(c => 
+      c.id === clientId 
+        ? { 
+            ...c, 
+            customProperties: (c.customProperties || []).map(p => 
+              p.id === propertyId ? { ...p, ...data } : p
+            )
+          }
+        : c
+    ));
+  }, []);
+  
+  const removeClientCustomProperty = useCallback((clientId: string, propertyId: string) => {
+    setClients(prev => prev.map(c => 
+      c.id === clientId 
+        ? { ...c, customProperties: (c.customProperties || []).filter(p => p.id !== propertyId) }
+        : c
+    ));
+  }, []);
+  
+  // Custom Property functions for Pets
+  const addPetCustomProperty = useCallback((petId: string, property: Omit<CustomProperty, 'id'>) => {
+    const newProperty: CustomProperty = {
+      ...property,
+      id: Date.now().toString(),
+    };
+    setPets(prev => prev.map(p => 
+      p.id === petId 
+        ? { ...p, customProperties: [...(p.customProperties || []), newProperty] }
+        : p
+    ));
+  }, []);
+  
+  const updatePetCustomProperty = useCallback((petId: string, propertyId: string, data: Partial<CustomProperty>) => {
+    setPets(prev => prev.map(p => 
+      p.id === petId 
+        ? { 
+            ...p, 
+            customProperties: (p.customProperties || []).map(prop => 
+              prop.id === propertyId ? { ...prop, ...data } : prop
+            )
+          }
+        : p
+    ));
+  }, []);
+  
+  const removePetCustomProperty = useCallback((petId: string, propertyId: string) => {
+    setPets(prev => prev.map(p => 
+      p.id === petId 
+        ? { ...p, customProperties: (p.customProperties || []).filter(prop => prop.id !== propertyId) }
+        : p
+    ));
+  }, []);
   
   const value: AppContextType = {
     language,
@@ -307,11 +429,24 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     workflows,
     setWorkflows,
     updateWorkflow,
+    addWorkflow,
+    deleteWorkflow,
     users,
     setUsers,
     addUser,
     removeUser,
     medicalRecords,
+    financeRecords,
+    setFinanceRecords,
+    addFinanceRecord,
+    updateFinanceRecord,
+    deleteFinanceRecord,
+    addClientCustomProperty,
+    updateClientCustomProperty,
+    removeClientCustomProperty,
+    addPetCustomProperty,
+    updatePetCustomProperty,
+    removePetCustomProperty,
     toasts,
     showToast,
     removeToast,

@@ -15,6 +15,7 @@ import {
   MoonIcon,
   GlobeIcon,
   UserIcon,
+  BanknotesIcon,
 } from './icons/Icons';
 import Toast from './Toast';
 
@@ -32,6 +33,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
     { href: '/clients', icon: UsersIcon, label: 'clients' as const },
     { href: '/pets', icon: PetIcon, label: 'pets' as const },
     { href: '/marketing', icon: MegaphoneIcon, label: 'marketing' as const },
+    { href: '/finance', icon: BanknotesIcon, label: 'finance' as const },
     { href: '/dashboard', icon: ChartIcon, label: 'dashboard' as const },
     { href: '/settings', icon: SettingsIcon, label: 'settings' as const },
   ];
