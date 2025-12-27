@@ -1,0 +1,398 @@
+import React, { useState } from 'react';
+import { useRouter } from 'next/router';
+import Link from 'next/link';
+import { useApp } from '@/context/AppContext';
+import Modal from '@/components/Modal';
+import {
+  ChevronLeftIcon,
+  EditIcon,
+  PetIcon,
+  UserIcon,
+  CalendarIcon,
+  PhoneIcon,
+  EmailIcon,
+} from '@/components/icons/Icons';
+import { format } from 'date-fns';
+
+const EditPetForm: React.FC<{
+  pet: any;
+  onSubmit: (data: any) => void;
+  onCancel: () => void;
+}> = ({ pet, onSubmit, onCancel }) => {
+  const { t } = useApp();
+  const [formData, setFormData] = useState({
+    name: pet.name,
+    species: pet.species,
+    breed: pet.breed,
+    age: pet.age,
+    allergies: pet.allergies,
+    vaccinations: pet.vaccinations,
+    notes: pet.notes,
+  });
+  const [errors, setErrors] = useState<{ [key: string]: string }>({});
+
+  const validate = () => {
+    const newErrors: { [key: string]: string } = {};
+    if (!formData.name.trim()) newErrors.name = t('required');
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (validate()) {
+      onSubmit(formData);
+    }
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div>
+        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+          {t('petName')} *
+        </label>
+        <input
+          type="text"
+          value={formData.name}
+          onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+          className="input-field"
+        />
+        {errors.name && <p className="text-red-500 text-sm mt-1">{errors.name}</p>}
+      </div>
+      
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+            {t('species')}
+          </label>
+          <select
+            value={formData.species}
+            onChange={(e) => setFormData({ ...formData, species: e.target.value })}
+            className="input-field"
+          >
+            <option value="Dog">{t('dog')}</option>
+            <option value="Cat">{t('cat')}</option>
+          </select>
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+            {t('age')}
+          </label>
+          <input
+            type="number"
+            min="0"
+            value={formData.age}
+            onChange={(e) => setFormData({ ...formData, age: parseInt(e.target.value) || 0 })}
+            className="input-field"
+          />
+        </div>
+      </div>
+      
+      <div>
+        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+          {t('breed')}
+        </label>
+        <input
+          type="text"
+          value={formData.breed}
+          onChange={(e) => setFormData({ ...formData, breed: e.target.value })}
+          className="input-field"
+        />
+      </div>
+      
+      <div>
+        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+          {t('allergies')}
+        </label>
+        <input
+          type="text"
+          value={formData.allergies}
+          onChange={(e) => setFormData({ ...formData, allergies: e.target.value })}
+          className="input-field"
+        />
+      </div>
+      
+      <div>
+        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+          {t('vaccinations')}
+        </label>
+        <select
+          value={formData.vaccinations}
+          onChange={(e) => setFormData({ ...formData, vaccinations: e.target.value })}
+          className="input-field"
+        >
+          <option value="Up to date">Up to date</option>
+          <option value="Needs update">Needs update</option>
+          <option value="Overdue">Overdue</option>
+        </select>
+      </div>
+      
+      <div>
+        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+          {t('notes')}
+        </label>
+        <textarea
+          value={formData.notes}
+          onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+          className="input-field min-h-[80px]"
+        />
+      </div>
+      
+      <div className="flex justify-end gap-3 pt-4">
+        <button type="button" onClick={onCancel} className="btn-secondary">
+          {t('cancel')}
+        </button>
+        <button type="submit" className="btn-primary">
+          {t('save')}
+        </button>
+      </div>
+    </form>
+  );
+};
+
+export default function PetDetailPage() {
+  const router = useRouter();
+  const { id } = router.query;
+  const { t, pets, clients, appointments, medicalRecords, updatePet } = useApp();
+  
+  const [showEditModal, setShowEditModal] = useState(false);
+
+  const pet = pets.find((p) => p.id === id);
+  const owner = pet ? clients.find((c) => c.id === pet.ownerId) : null;
+  const petAppointments = appointments
+    .filter((a) => a.petId === id)
+    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  const petMedicalRecords = medicalRecords
+    .filter((r) => r.petId === id)
+    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
+  const handleEditPet = (data: any) => {
+    updatePet(id as string, data);
+    setShowEditModal(false);
+  };
+
+  if (!pet) {
+    return (
+      <div className="animate-fade-in text-center py-12">
+        <p className="text-slate-500 dark:text-slate-400">{t('loading')}</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="animate-fade-in">
+      {/* Header */}
+      <div className="flex items-center gap-4 mb-8">
+        <button
+          onClick={() => router.back()}
+          className="p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
+        >
+          <ChevronLeftIcon className="w-5 h-5 text-slate-600 dark:text-slate-400" />
+        </button>
+        <div className={`w-16 h-16 rounded-2xl flex items-center justify-center shadow-lg ${
+          pet.species === 'Dog'
+            ? 'bg-gradient-to-br from-amber-400 to-amber-600 shadow-amber-500/30'
+            : 'bg-gradient-to-br from-purple-400 to-purple-600 shadow-purple-500/30'
+        }`}>
+          <PetIcon className="w-8 h-8 text-white" />
+        </div>
+        <div className="flex-1">
+          <h1 className="text-3xl font-display font-bold text-slate-800 dark:text-white">
+            {pet.name}
+          </h1>
+          <p className="text-slate-500 dark:text-slate-400 mt-1">
+            {pet.breed} · {pet.age} {t('yearsOld')}
+          </p>
+        </div>
+        <button
+          onClick={() => setShowEditModal(true)}
+          className="btn-secondary flex items-center gap-2"
+        >
+          <EditIcon className="w-4 h-4" />
+          {t('edit')}
+        </button>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Left Column - Pet Info & Medical */}
+        <div className="lg:col-span-2 space-y-6">
+          {/* Pet Details */}
+          <div className="card">
+            <h2 className="text-lg font-semibold text-slate-800 dark:text-white mb-4">
+              {t('petDetails')}
+            </h2>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+              <div>
+                <p className="text-sm text-slate-500 dark:text-slate-400">{t('species')}</p>
+                <p className="font-medium text-slate-800 dark:text-white mt-1">
+                  {t(pet.species.toLowerCase() as 'dog' | 'cat')}
+                </p>
+              </div>
+              <div>
+                <p className="text-sm text-slate-500 dark:text-slate-400">{t('breed')}</p>
+                <p className="font-medium text-slate-800 dark:text-white mt-1">{pet.breed}</p>
+              </div>
+              <div>
+                <p className="text-sm text-slate-500 dark:text-slate-400">{t('age')}</p>
+                <p className="font-medium text-slate-800 dark:text-white mt-1">
+                  {pet.age} {t('yearsOld')}
+                </p>
+              </div>
+              <div>
+                <p className="text-sm text-slate-500 dark:text-slate-400">{t('allergies')}</p>
+                <p className="font-medium text-slate-800 dark:text-white mt-1">{pet.allergies}</p>
+              </div>
+              <div>
+                <p className="text-sm text-slate-500 dark:text-slate-400">{t('vaccinations')}</p>
+                <span className={`inline-block mt-1 px-2 py-0.5 rounded-full text-xs font-medium ${
+                  pet.vaccinations === 'Up to date'
+                    ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
+                    : 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400'
+                }`}>
+                  {pet.vaccinations}
+                </span>
+              </div>
+            </div>
+            {pet.notes && (
+              <div className="mt-4 pt-4 border-t border-slate-200 dark:border-slate-700">
+                <p className="text-sm text-slate-500 dark:text-slate-400">{t('notes')}</p>
+                <p className="text-slate-700 dark:text-slate-300 mt-1">{pet.notes}</p>
+              </div>
+            )}
+          </div>
+
+          {/* Medical History */}
+          <div className="card">
+            <h2 className="text-lg font-semibold text-slate-800 dark:text-white mb-4">
+              {t('medicalHistory')}
+            </h2>
+            {petMedicalRecords.length === 0 ? (
+              <p className="text-slate-500 dark:text-slate-400 text-center py-4">
+                {t('noResults')}
+              </p>
+            ) : (
+              <div className="space-y-4">
+                {petMedicalRecords.map((record) => (
+                  <div
+                    key={record.id}
+                    className="p-4 rounded-xl bg-slate-50 dark:bg-slate-700/50 border-l-4 border-primary-500"
+                  >
+                    <div className="flex items-center justify-between mb-2">
+                      <p className="text-sm font-medium text-slate-800 dark:text-white">
+                        {format(new Date(record.date), 'MMMM d, yyyy')}
+                      </p>
+                      <p className="text-sm text-slate-500 dark:text-slate-400">
+                        {record.veterinarian}
+                      </p>
+                    </div>
+                    <p className="text-slate-600 dark:text-slate-300">{record.description}</p>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Appointments */}
+          <div className="card">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-semibold text-slate-800 dark:text-white">
+                {t('appointmentsCalendar')}
+              </h2>
+              <Link
+                href="/calendar"
+                className="text-sm text-primary-600 dark:text-primary-400 hover:underline"
+              >
+                {t('scheduleAppointment')}
+              </Link>
+            </div>
+            {petAppointments.length === 0 ? (
+              <p className="text-slate-500 dark:text-slate-400 text-center py-4">
+                {t('noAppointments')}
+              </p>
+            ) : (
+              <div className="space-y-3">
+                {petAppointments.map((apt) => (
+                  <div
+                    key={apt.id}
+                    className="flex items-center justify-between p-3 rounded-xl bg-slate-50 dark:bg-slate-700/50"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-xl bg-white dark:bg-slate-600 shadow-sm flex items-center justify-center">
+                        <CalendarIcon className="w-5 h-5 text-slate-500 dark:text-slate-400" />
+                      </div>
+                      <div>
+                        <p className="font-medium text-slate-800 dark:text-white">{apt.type}</p>
+                        <p className="text-sm text-slate-500 dark:text-slate-400">
+                          {format(new Date(apt.date), 'MMM d, yyyy')} at {apt.time}
+                        </p>
+                      </div>
+                    </div>
+                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                      apt.status === 'scheduled'
+                        ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'
+                        : apt.status === 'completed'
+                        ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
+                        : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
+                    }`}>
+                      {t(apt.status as 'scheduled' | 'completed' | 'cancelled')}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Right Column - Owner Info */}
+        <div className="space-y-6">
+          {owner && (
+            <div className="card">
+              <h2 className="text-lg font-semibold text-slate-800 dark:text-white mb-4">
+                {t('owner')}
+              </h2>
+              <Link
+                href={`/clients/${owner.id}`}
+                className="flex items-center gap-4 p-4 rounded-xl bg-slate-50 dark:bg-slate-700/50 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
+              >
+                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary-400 to-primary-600 flex items-center justify-center text-white font-bold text-lg">
+                  {owner.name.charAt(0)}
+                </div>
+                <div>
+                  <p className="font-medium text-slate-800 dark:text-white">{owner.name}</p>
+                  <p className="text-sm text-slate-500 dark:text-slate-400">{t('viewDetails')}</p>
+                </div>
+              </Link>
+              
+              <div className="mt-4 space-y-3">
+                <div className="flex items-center gap-3 text-sm">
+                  <PhoneIcon className="w-4 h-4 text-slate-400" />
+                  <span className="text-slate-600 dark:text-slate-300">{owner.phone}</span>
+                </div>
+                {owner.email && (
+                  <div className="flex items-center gap-3 text-sm">
+                    <EmailIcon className="w-4 h-4 text-slate-400" />
+                    <span className="text-slate-600 dark:text-slate-300">{owner.email}</span>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Edit Pet Modal */}
+      <Modal
+        isOpen={showEditModal}
+        onClose={() => setShowEditModal(false)}
+        title={t('editPet')}
+      >
+        <EditPetForm
+          pet={pet}
+          onSubmit={handleEditPet}
+          onCancel={() => setShowEditModal(false)}
+        />
+      </Modal>
+    </div>
+  );
+}
+
