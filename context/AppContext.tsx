@@ -33,6 +33,8 @@ interface AppContextType {
   setClients: React.Dispatch<React.SetStateAction<Client[]>>;
   addClient: (client: Omit<Client, 'id' | 'createdAt'>) => void;
   updateClient: (id: string, data: Partial<Client>) => void;
+  addClientTag: (clientId: string, tag: string) => void;
+  removeClientTag: (clientId: string, tag: string) => void;
   
   pets: Pet[];
   setPets: React.Dispatch<React.SetStateAction<Pet[]>>;
@@ -142,6 +144,22 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     setClients(prev => prev.map(c => c.id === id ? { ...c, ...data } : c));
     showToast(t('clientUpdated'));
   }, [showToast, t]);
+  
+  const addClientTag = useCallback((clientId: string, tag: string) => {
+    setClients(prev => prev.map(c => 
+      c.id === clientId && !c.tags.includes(tag)
+        ? { ...c, tags: [...c.tags, tag] }
+        : c
+    ));
+  }, []);
+  
+  const removeClientTag = useCallback((clientId: string, tag: string) => {
+    setClients(prev => prev.map(c => 
+      c.id === clientId
+        ? { ...c, tags: c.tags.filter(t => t !== tag) }
+        : c
+    ));
+  }, []);
   
   // Pet functions
   const addPet = useCallback((petData: Omit<Pet, 'id'>) => {
@@ -264,6 +282,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     setClients,
     addClient,
     updateClient,
+    addClientTag,
+    removeClientTag,
     pets,
     setPets,
     addPet,

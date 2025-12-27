@@ -115,7 +115,7 @@ const StatCard: React.FC<{
 );
 
 export default function MarketingPage() {
-  const { t, clients, pets, campaigns, segments, templates, workflows, addCampaign, updateWorkflow } = useApp();
+  const { t, clients, pets, campaigns, segments, templates, workflows, addCampaign, updateWorkflow, addClientTag, removeClientTag } = useApp();
   const [activeTab, setActiveTab] = useState<TabType>('campaigns');
   const [channel, setChannel] = useState<'email' | 'whatsapp'>('email');
   const [subject, setSubject] = useState('');
@@ -123,11 +123,18 @@ export default function MarketingPage() {
   const [selectAll, setSelectAll] = useState(true);
   const [selectedSegment, setSelectedSegment] = useState<string>('');
   const [selectedClients, setSelectedClients] = useState<string[]>([]);
-  const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [selectedCampaignTags, setSelectedCampaignTags] = useState<string[]>([]);
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [isSending, setIsSending] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [filterTag, setFilterTag] = useState<string>('');
+  
+  // Recipient Builder State
+  const [recipientMode, setRecipientMode] = useState<'all' | 'tags' | 'manual' | 'segment'>('all');
+  const [selectedContactTags, setSelectedContactTags] = useState<string[]>([]);
+  const [tagFilterMode, setTagFilterMode] = useState<'any' | 'all'>('any');
+  const [showRecipientBuilder, setShowRecipientBuilder] = useState(false);
+  const [clientSearchQuery, setClientSearchQuery] = useState('');
   
   // Quick Action Modal State
   const [showQuickActionModal, setShowQuickActionModal] = useState(false);
@@ -141,6 +148,71 @@ export default function MarketingPage() {
   
   // Calendar State
   const [calendarMonth, setCalendarMonth] = useState(new Date());
+  
+  // All unique client tags from all clients
+  const allClientTags = useMemo(() => {
+    const tags = new Set<string>();
+    clients.forEach(c => c.tags?.forEach(tag => tags.add(tag)));
+    return Array.from(tags).sort();
+  }, [clients]);
+  
+  // Get tag color based on tag id
+  const getTagColor = (tagId: string) => {
+    const colors: { [key: string]: string } = {
+      'vip': 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400',
+      'new-client': 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400',
+      'frequent-visitor': 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
+      'needs-followup': 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
+      'payment-pending': 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400',
+      'senior-pet': 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400',
+      'puppy-kitten': 'bg-pink-100 text-pink-700 dark:bg-pink-900/30 dark:text-pink-400',
+      'multiple-pets': 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-400',
+      'grooming-regular': 'bg-cyan-100 text-cyan-700 dark:bg-cyan-900/30 dark:text-cyan-400',
+      'dental-care': 'bg-teal-100 text-teal-700 dark:bg-teal-900/30 dark:text-teal-400',
+      'insurance': 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400',
+      'referral-source': 'bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-400',
+      'boarding-client': 'bg-sky-100 text-sky-700 dark:bg-sky-900/30 dark:text-sky-400',
+      'special-needs': 'bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400',
+      'breeder': 'bg-fuchsia-100 text-fuchsia-700 dark:bg-fuchsia-900/30 dark:text-fuchsia-400',
+    };
+    return colors[tagId] || 'bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-300';
+  };
+  
+  // Format tag name for display
+  const formatTagName = (tagId: string) => {
+    return tagId.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+  };
+  
+  // Filter clients based on selected tags
+  const filteredClientsByTags = useMemo(() => {
+    if (selectedContactTags.length === 0) return clients;
+    
+    if (tagFilterMode === 'any') {
+      return clients.filter(c => selectedContactTags.some(tag => c.tags?.includes(tag)));
+    } else {
+      return clients.filter(c => selectedContactTags.every(tag => c.tags?.includes(tag)));
+    }
+  }, [clients, selectedContactTags, tagFilterMode]);
+  
+  // Search filtered clients
+  const searchFilteredClients = useMemo(() => {
+    if (!clientSearchQuery.trim()) return filteredClientsByTags;
+    const query = clientSearchQuery.toLowerCase();
+    return filteredClientsByTags.filter(c => 
+      c.name.toLowerCase().includes(query) ||
+      c.email.toLowerCase().includes(query) ||
+      c.phone.includes(query)
+    );
+  }, [filteredClientsByTags, clientSearchQuery]);
+  
+  // Count clients per tag
+  const clientsPerTag = useMemo(() => {
+    const counts: { [key: string]: number } = {};
+    allClientTags.forEach(tag => {
+      counts[tag] = clients.filter(c => c.tags?.includes(tag)).length;
+    });
+    return counts;
+  }, [clients, allClientTags]);
 
   // Calculate stats
   const stats = useMemo(() => {
@@ -187,17 +259,23 @@ export default function MarketingPage() {
   }, [campaigns, searchQuery, filterTag]);
 
   const recipientCount = useMemo(() => {
-    if (selectedSegment) {
-      const segment = segments.find(s => s.id === selectedSegment);
-      return segment?.clientCount || 0;
+    switch (recipientMode) {
+      case 'all':
+        return clients.length;
+      case 'segment':
+        const segment = segments.find(s => s.id === selectedSegment);
+        return segment?.clientCount || 0;
+      case 'tags':
+        return filteredClientsByTags.length;
+      case 'manual':
+        return selectedClients.length;
+      default:
+        return 0;
     }
-    if (selectAll) return clients.length;
-    return selectedClients.length;
-  }, [selectAll, selectedClients, selectedSegment, clients, segments]);
+  }, [recipientMode, clients, selectedSegment, segments, filteredClientsByTags, selectedClients]);
 
   const handleClientToggle = (clientId: string) => {
-    setSelectAll(false);
-    setSelectedSegment('');
+    setRecipientMode('manual');
     setSelectedClients((prev) =>
       prev.includes(clientId)
         ? prev.filter((id) => id !== clientId)
@@ -206,21 +284,42 @@ export default function MarketingPage() {
   };
 
   const handleSelectAll = () => {
-    setSelectAll(true);
-    setSelectedSegment('');
+    setRecipientMode('all');
     setSelectedClients([]);
+    setSelectedContactTags([]);
+    setSelectedSegment('');
   };
 
   const handleSegmentSelect = (segmentId: string) => {
+    setRecipientMode('segment');
     setSelectedSegment(segmentId);
-    setSelectAll(false);
     setSelectedClients([]);
+    setSelectedContactTags([]);
   };
 
-  const handleTagToggle = (tag: string) => {
-    setSelectedTags(prev =>
+  const handleContactTagToggle = (tag: string) => {
+    setRecipientMode('tags');
+    setSelectedContactTags(prev =>
       prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag]
     );
+  };
+  
+  const handleCampaignTagToggle = (tag: string) => {
+    setSelectedCampaignTags(prev =>
+      prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag]
+    );
+  };
+  
+  const handleSelectAllFiltered = () => {
+    setRecipientMode('manual');
+    setSelectedClients(searchFilteredClients.map(c => c.id));
+  };
+  
+  const handleClearSelection = () => {
+    setSelectedClients([]);
+    setSelectedContactTags([]);
+    setSelectedSegment('');
+    setRecipientMode('all');
   };
 
   const handleUseTemplate = (template: any) => {
@@ -236,7 +335,7 @@ export default function MarketingPage() {
     const newErrors: { [key: string]: string } = {};
     if (!message.trim()) newErrors.message = t('required');
     if (channel === 'email' && !subject.trim()) newErrors.subject = t('required');
-    if (!selectAll && !selectedSegment && selectedClients.length === 0) newErrors.recipients = t('required');
+    if (recipientCount === 0) newErrors.recipients = t('required');
     
     setErrors(newErrors);
     
@@ -245,6 +344,12 @@ export default function MarketingPage() {
       await new Promise((resolve) => setTimeout(resolve, 1500));
       
       const segment = selectedSegment ? segments.find(s => s.id === selectedSegment) : null;
+      let segmentName = segment?.name;
+      
+      // Build segment name for tag-based selection
+      if (recipientMode === 'tags' && selectedContactTags.length > 0) {
+        segmentName = `Tags: ${selectedContactTags.map(formatTagName).join(', ')}`;
+      }
       
       addCampaign({
         channel,
@@ -252,8 +357,8 @@ export default function MarketingPage() {
         message,
         recipients: recipientCount,
         segmentId: selectedSegment || undefined,
-        segmentName: segment?.name,
-        tags: selectedTags,
+        segmentName,
+        tags: selectedCampaignTags,
         status: 'sent',
         stats: {
           delivered: channel === 'email' ? Math.floor(recipientCount * 0.98) : recipientCount,
@@ -265,7 +370,8 @@ export default function MarketingPage() {
       
       setMessage('');
       setSubject('');
-      setSelectedTags([]);
+      setSelectedCampaignTags([]);
+      handleClearSelection();
       setIsSending(false);
     }
   };
@@ -487,62 +593,304 @@ export default function MarketingPage() {
               </div>
             </div>
 
-            {/* Recipients - Segments */}
+            {/* Recipients - Comprehensive Builder */}
             <div>
-              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                {t('recipients')}
-              </label>
-              <div className="space-y-2">
-                <label className="flex items-center gap-3 p-3 rounded-xl bg-slate-50 dark:bg-slate-700/50 cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors">
-                  <input
-                    type="radio"
-                    checked={selectAll && !selectedSegment}
-                    onChange={handleSelectAll}
-                    className="w-5 h-5 text-primary-500 focus:ring-primary-400"
-                  />
-                  <div className="flex-1">
-                    <span className="font-medium text-slate-800 dark:text-white">
-                      {t('allClients')}
-                    </span>
-                    <span className="text-sm text-slate-500 dark:text-slate-400 ml-2">
-                      ({clients.length})
-                    </span>
-                  </div>
+              <div className="flex items-center justify-between mb-2">
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">
+                  {t('recipients')}
                 </label>
+                <button
+                  type="button"
+                  onClick={() => setShowRecipientBuilder(!showRecipientBuilder)}
+                  className="text-xs text-primary-600 dark:text-primary-400 hover:underline flex items-center gap-1"
+                >
+                  <UsersIcon className="w-3 h-3" />
+                  {t('buildList')}
+                </button>
+              </div>
+              
+              {/* Quick Selection Summary */}
+              <div 
+                onClick={() => setShowRecipientBuilder(true)}
+                className={`p-4 rounded-xl border-2 cursor-pointer transition-all ${
+                  recipientCount > 0
+                    ? 'bg-primary-50 dark:bg-primary-900/20 border-primary-300 dark:border-primary-700'
+                    : 'bg-slate-50 dark:bg-slate-700/50 border-slate-200 dark:border-slate-600 hover:border-primary-300 dark:hover:border-primary-600'
+                }`}
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
+                      recipientCount > 0 ? 'bg-primary-500' : 'bg-slate-300 dark:bg-slate-600'
+                    }`}>
+                      <UsersIcon className="w-5 h-5 text-white" />
+                    </div>
+                    <div>
+                      <p className="font-semibold text-slate-800 dark:text-white">
+                        {recipientCount} {t('selectedContacts')}
+                      </p>
+                      <p className="text-xs text-slate-500 dark:text-slate-400">
+                        {recipientMode === 'all' && t('allClients')}
+                        {recipientMode === 'segment' && segments.find(s => s.id === selectedSegment)?.name}
+                        {recipientMode === 'tags' && `${selectedContactTags.length} ${t('contactTags').toLowerCase()}`}
+                        {recipientMode === 'manual' && t('manualSelection')}
+                      </p>
+                    </div>
+                  </div>
+                  <ChevronRightIcon className="w-5 h-5 text-slate-400" />
+                </div>
                 
-                {/* Segment options */}
-                <div className="border-t border-slate-200 dark:border-slate-600 pt-2 mt-2">
-                  <p className="text-xs font-medium text-slate-500 dark:text-slate-400 mb-2 flex items-center gap-1">
-                    <SegmentIcon className="w-3 h-3" />
-                    {t('segments')}
-                  </p>
-                  <div className="grid grid-cols-2 gap-2">
-                    {segments.slice(0, 6).map((segment) => (
-                      <label
-                        key={segment.id}
-                        className={`flex items-center gap-2 p-2 rounded-lg cursor-pointer transition-colors ${
-                          selectedSegment === segment.id
-                            ? 'bg-primary-100 dark:bg-primary-900/30 border-2 border-primary-400'
-                            : 'bg-slate-50 dark:bg-slate-700/50 border-2 border-transparent hover:bg-slate-100 dark:hover:bg-slate-700'
-                        }`}
-                      >
-                        <input
-                          type="radio"
-                          checked={selectedSegment === segment.id}
-                          onChange={() => handleSegmentSelect(segment.id)}
-                          className="sr-only"
-                        />
-                        <span className="text-sm text-slate-700 dark:text-slate-300 truncate">
-                          {segment.name}
-                        </span>
-                        <span className="text-xs text-slate-500 dark:text-slate-400 ml-auto">
-                          ({segment.clientCount})
-                        </span>
-                      </label>
+                {/* Show selected tags preview */}
+                {recipientMode === 'tags' && selectedContactTags.length > 0 && (
+                  <div className="flex flex-wrap gap-1 mt-3 pt-3 border-t border-primary-200 dark:border-primary-800">
+                    {selectedContactTags.map(tag => (
+                      <span key={tag} className={`text-xs px-2 py-0.5 rounded-full ${getTagColor(tag)}`}>
+                        {formatTagName(tag)}
+                      </span>
                     ))}
                   </div>
-                </div>
+                )}
+                
+                {/* Show selected clients preview */}
+                {recipientMode === 'manual' && selectedClients.length > 0 && (
+                  <div className="flex flex-wrap gap-1 mt-3 pt-3 border-t border-primary-200 dark:border-primary-800">
+                    {selectedClients.slice(0, 5).map(clientId => {
+                      const client = clients.find(c => c.id === clientId);
+                      return client ? (
+                        <span key={clientId} className="text-xs px-2 py-0.5 rounded-full bg-slate-200 dark:bg-slate-600 text-slate-700 dark:text-slate-300">
+                          {client.name}
+                        </span>
+                      ) : null;
+                    })}
+                    {selectedClients.length > 5 && (
+                      <span className="text-xs px-2 py-0.5 rounded-full bg-slate-200 dark:bg-slate-600 text-slate-700 dark:text-slate-300">
+                        +{selectedClients.length - 5} more
+                      </span>
+                    )}
+                  </div>
+                )}
               </div>
+              
+              {/* Expanded Recipient Builder */}
+              {showRecipientBuilder && (
+                <div className="mt-4 p-4 rounded-xl bg-slate-50 dark:bg-slate-700/50 border border-slate-200 dark:border-slate-600">
+                  {/* Mode Selection Tabs */}
+                  <div className="flex gap-2 mb-4 border-b border-slate-200 dark:border-slate-600 pb-3">
+                    <button
+                      type="button"
+                      onClick={handleSelectAll}
+                      className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
+                        recipientMode === 'all'
+                          ? 'bg-primary-500 text-white'
+                          : 'text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-600'
+                      }`}
+                    >
+                      {t('allClients')} ({clients.length})
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setRecipientMode('tags')}
+                      className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all flex items-center gap-1 ${
+                        recipientMode === 'tags'
+                          ? 'bg-primary-500 text-white'
+                          : 'text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-600'
+                      }`}
+                    >
+                      <TagIcon className="w-3 h-3" />
+                      {t('selectByTag')}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setRecipientMode('manual')}
+                      className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
+                        recipientMode === 'manual'
+                          ? 'bg-primary-500 text-white'
+                          : 'text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-600'
+                      }`}
+                    >
+                      {t('manualSelection')}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setRecipientMode('segment')}
+                      className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all flex items-center gap-1 ${
+                        recipientMode === 'segment'
+                          ? 'bg-primary-500 text-white'
+                          : 'text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-600'
+                      }`}
+                    >
+                      <SegmentIcon className="w-3 h-3" />
+                      {t('segments')}
+                    </button>
+                  </div>
+                  
+                  {/* Tag Selection Mode */}
+                  {recipientMode === 'tags' && (
+                    <div className="space-y-3">
+                      {/* Tag filter mode */}
+                      <div className="flex items-center gap-4 mb-3">
+                        <label className="flex items-center gap-2 cursor-pointer">
+                          <input
+                            type="radio"
+                            checked={tagFilterMode === 'any'}
+                            onChange={() => setTagFilterMode('any')}
+                            className="w-4 h-4 text-primary-500"
+                          />
+                          <span className="text-sm text-slate-700 dark:text-slate-300">{t('anyOfTheseTags')}</span>
+                        </label>
+                        <label className="flex items-center gap-2 cursor-pointer">
+                          <input
+                            type="radio"
+                            checked={tagFilterMode === 'all'}
+                            onChange={() => setTagFilterMode('all')}
+                            className="w-4 h-4 text-primary-500"
+                          />
+                          <span className="text-sm text-slate-700 dark:text-slate-300">{t('allOfTheseTags')}</span>
+                        </label>
+                      </div>
+                      
+                      {/* Tag grid */}
+                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                        {allClientTags.map(tag => (
+                          <button
+                            key={tag}
+                            type="button"
+                            onClick={() => handleContactTagToggle(tag)}
+                            className={`flex items-center justify-between p-2 rounded-lg text-left transition-all ${
+                              selectedContactTags.includes(tag)
+                                ? 'ring-2 ring-primary-500 ' + getTagColor(tag)
+                                : getTagColor(tag) + ' opacity-70 hover:opacity-100'
+                            }`}
+                          >
+                            <span className="text-sm font-medium truncate">{formatTagName(tag)}</span>
+                            <span className="text-xs opacity-75 ml-1">({clientsPerTag[tag]})</span>
+                          </button>
+                        ))}
+                      </div>
+                      
+                      {selectedContactTags.length > 0 && (
+                        <p className="text-sm text-primary-600 dark:text-primary-400 mt-2">
+                          {filteredClientsByTags.length} {t('contactsWithTag')}
+                        </p>
+                      )}
+                    </div>
+                  )}
+                  
+                  {/* Manual Selection Mode */}
+                  {recipientMode === 'manual' && (
+                    <div className="space-y-3">
+                      {/* Search */}
+                      <div className="relative">
+                        <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                        <input
+                          type="text"
+                          value={clientSearchQuery}
+                          onChange={(e) => setClientSearchQuery(e.target.value)}
+                          className="input-field pl-10 py-2"
+                          placeholder={t('searchClients')}
+                        />
+                      </div>
+                      
+                      {/* Quick actions */}
+                      <div className="flex gap-2">
+                        <button
+                          type="button"
+                          onClick={handleSelectAllFiltered}
+                          className="text-xs text-primary-600 dark:text-primary-400 hover:underline"
+                        >
+                          {t('selectAll')} ({searchFilteredClients.length})
+                        </button>
+                        {selectedClients.length > 0 && (
+                          <button
+                            type="button"
+                            onClick={() => setSelectedClients([])}
+                            className="text-xs text-red-600 dark:text-red-400 hover:underline"
+                          >
+                            {t('clearSelection')}
+                          </button>
+                        )}
+                      </div>
+                      
+                      {/* Client list */}
+                      <div className="max-h-60 overflow-y-auto space-y-1 border border-slate-200 dark:border-slate-600 rounded-lg p-2">
+                        {searchFilteredClients.map(client => (
+                          <label
+                            key={client.id}
+                            className={`flex items-center gap-3 p-2 rounded-lg cursor-pointer transition-all ${
+                              selectedClients.includes(client.id)
+                                ? 'bg-primary-100 dark:bg-primary-900/30'
+                                : 'hover:bg-slate-100 dark:hover:bg-slate-600'
+                            }`}
+                          >
+                            <input
+                              type="checkbox"
+                              checked={selectedClients.includes(client.id)}
+                              onChange={() => handleClientToggle(client.id)}
+                              className="w-4 h-4 rounded text-primary-500 focus:ring-primary-400"
+                            />
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-medium text-slate-800 dark:text-white truncate">
+                                {client.name}
+                              </p>
+                              <p className="text-xs text-slate-500 dark:text-slate-400 truncate">
+                                {client.email}
+                              </p>
+                            </div>
+                            {/* Client tags */}
+                            <div className="flex gap-1 flex-shrink-0">
+                              {client.tags?.slice(0, 2).map(tag => (
+                                <span key={tag} className={`text-xs px-1.5 py-0.5 rounded ${getTagColor(tag)}`}>
+                                  {formatTagName(tag).substring(0, 3)}
+                                </span>
+                              ))}
+                              {(client.tags?.length || 0) > 2 && (
+                                <span className="text-xs text-slate-400">+{client.tags!.length - 2}</span>
+                              )}
+                            </div>
+                          </label>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* Segment Selection Mode */}
+                  {recipientMode === 'segment' && (
+                    <div className="grid grid-cols-2 gap-2">
+                      {segments.map((segment) => (
+                        <button
+                          key={segment.id}
+                          type="button"
+                          onClick={() => handleSegmentSelect(segment.id)}
+                          className={`flex flex-col items-start p-3 rounded-lg text-left transition-all ${
+                            selectedSegment === segment.id
+                              ? 'bg-primary-100 dark:bg-primary-900/30 ring-2 ring-primary-500'
+                              : 'bg-white dark:bg-slate-600 hover:bg-slate-100 dark:hover:bg-slate-500'
+                          }`}
+                        >
+                          <span className="text-sm font-medium text-slate-800 dark:text-white">
+                            {segment.name}
+                          </span>
+                          <span className="text-xs text-slate-500 dark:text-slate-400">
+                            {segment.clientCount} {t('clients').toLowerCase()}
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                  
+                  {/* Close builder button */}
+                  <div className="flex justify-end mt-4 pt-3 border-t border-slate-200 dark:border-slate-600">
+                    <button
+                      type="button"
+                      onClick={() => setShowRecipientBuilder(false)}
+                      className="text-sm text-primary-600 dark:text-primary-400 hover:underline"
+                    >
+                      {t('close')}
+                    </button>
+                  </div>
+                </div>
+              )}
+              
               {errors.recipients && (
                 <p className="text-red-500 text-sm mt-1">{errors.recipients}</p>
               )}
@@ -597,7 +945,7 @@ export default function MarketingPage() {
               )}
             </div>
 
-            {/* Tags */}
+            {/* Campaign Tags */}
             <div>
               <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
                 {t('campaignTags')}
@@ -607,9 +955,9 @@ export default function MarketingPage() {
                   <button
                     key={tag}
                     type="button"
-                    onClick={() => handleTagToggle(tag)}
+                    onClick={() => handleCampaignTagToggle(tag)}
                     className={`px-3 py-1.5 rounded-full text-sm font-medium transition-all ${
-                      selectedTags.includes(tag)
+                      selectedCampaignTags.includes(tag)
                         ? 'bg-primary-500 text-white'
                         : 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600'
                     }`}

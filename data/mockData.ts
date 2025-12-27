@@ -8,7 +8,27 @@ export interface Client {
   address: string;
   numberOfPets: number;
   createdAt: string;
+  tags: string[];
 }
+
+// Available client tag definitions (for UI)
+export const clientTagDefinitions = [
+  { id: 'vip', name: 'VIP', color: 'amber' },
+  { id: 'new-client', name: 'New Client', color: 'green' },
+  { id: 'frequent-visitor', name: 'Frequent Visitor', color: 'blue' },
+  { id: 'needs-followup', name: 'Needs Follow-up', color: 'red' },
+  { id: 'payment-pending', name: 'Payment Pending', color: 'orange' },
+  { id: 'senior-pet', name: 'Senior Pet Owner', color: 'purple' },
+  { id: 'puppy-kitten', name: 'Puppy/Kitten Owner', color: 'pink' },
+  { id: 'multiple-pets', name: 'Multiple Pets', color: 'indigo' },
+  { id: 'grooming-regular', name: 'Grooming Regular', color: 'cyan' },
+  { id: 'dental-care', name: 'Dental Care Plan', color: 'teal' },
+  { id: 'insurance', name: 'Has Insurance', color: 'emerald' },
+  { id: 'referral-source', name: 'Referral Source', color: 'violet' },
+  { id: 'boarding-client', name: 'Boarding Client', color: 'sky' },
+  { id: 'special-needs', name: 'Special Needs Pet', color: 'rose' },
+  { id: 'breeder', name: 'Breeder', color: 'fuchsia' },
+];
 
 export interface Pet {
   id: string;
@@ -131,17 +151,33 @@ export interface MedicalRecord {
   veterinarian: string;
 }
 
-// Initial Mock Data
+// Initial Mock Data - 18 clients with varied tags
 export const initialClients: Client[] = [
-  { id: '1', name: 'María García', phone: '+51 999 123 456', email: 'maria.garcia@email.com', address: '123 Oak Street, Miami, FL', numberOfPets: 2, createdAt: '2024-06-15' },
-  { id: '2', name: 'John Smith', phone: '+51 999 234 567', email: 'john.smith@email.com', address: '456 Pine Avenue, Miami, FL', numberOfPets: 1, createdAt: '2024-08-22' },
-  { id: '3', name: 'Ana Rodríguez', phone: '+51 999 345 678', email: 'ana.rodriguez@email.com', address: '789 Maple Drive, Miami, FL', numberOfPets: 3, createdAt: '2024-09-10' },
-  { id: '4', name: 'Carlos Mendez', phone: '+51 999 456 789', email: 'carlos.mendez@email.com', address: '321 Cedar Lane, Miami, FL', numberOfPets: 1, createdAt: '2024-10-05' },
-  { id: '5', name: 'Sarah Johnson', phone: '+51 999 567 890', email: 'sarah.j@email.com', address: '654 Birch Road, Miami, FL', numberOfPets: 2, createdAt: '2024-11-18' },
-  { id: '6', name: 'Roberto Fernández', phone: '+51 999 678 901', email: 'roberto.f@email.com', address: '987 Elm Court, Miami, FL', numberOfPets: 1, createdAt: '2024-12-01' },
+  // Original 6 clients with tags added
+  { id: '1', name: 'María García', phone: '+51 999 123 456', email: 'maria.garcia@email.com', address: '123 Oak Street, Miami, FL', numberOfPets: 2, createdAt: '2024-06-15', tags: ['vip', 'frequent-visitor', 'multiple-pets'] },
+  { id: '2', name: 'John Smith', phone: '+51 999 234 567', email: 'john.smith@email.com', address: '456 Pine Avenue, Miami, FL', numberOfPets: 1, createdAt: '2024-08-22', tags: ['needs-followup', 'dental-care'] },
+  { id: '3', name: 'Ana Rodríguez', phone: '+51 999 345 678', email: 'ana.rodriguez@email.com', address: '789 Maple Drive, Miami, FL', numberOfPets: 3, createdAt: '2024-09-10', tags: ['vip', 'multiple-pets', 'insurance'] },
+  { id: '4', name: 'Carlos Mendez', phone: '+51 999 456 789', email: 'carlos.mendez@email.com', address: '321 Cedar Lane, Miami, FL', numberOfPets: 1, createdAt: '2024-10-05', tags: ['grooming-regular'] },
+  { id: '5', name: 'Sarah Johnson', phone: '+51 999 567 890', email: 'sarah.j@email.com', address: '654 Birch Road, Miami, FL', numberOfPets: 2, createdAt: '2024-11-18', tags: ['senior-pet', 'multiple-pets', 'frequent-visitor'] },
+  { id: '6', name: 'Roberto Fernández', phone: '+51 999 678 901', email: 'roberto.f@email.com', address: '987 Elm Court, Miami, FL', numberOfPets: 1, createdAt: '2024-12-01', tags: ['new-client', 'puppy-kitten'] },
+  
+  // 12 new clients with varied demographics and tags
+  { id: '7', name: 'Emily Watson', phone: '+51 999 789 012', email: 'emily.watson@email.com', address: '147 Willow Way, Miami, FL', numberOfPets: 1, createdAt: '2024-07-20', tags: ['vip', 'insurance', 'frequent-visitor'] },
+  { id: '8', name: 'Miguel Torres', phone: '+51 999 890 123', email: 'miguel.t@email.com', address: '258 Palm Street, Miami, FL', numberOfPets: 2, createdAt: '2024-05-12', tags: ['breeder', 'multiple-pets', 'dental-care'] },
+  { id: '9', name: 'Jennifer Lee', phone: '+51 999 901 234', email: 'jennifer.lee@email.com', address: '369 Coral Drive, Miami, FL', numberOfPets: 1, createdAt: '2024-09-28', tags: ['senior-pet', 'special-needs'] },
+  { id: '10', name: 'David Kim', phone: '+51 999 012 345', email: 'david.kim@email.com', address: '480 Ocean Blvd, Miami, FL', numberOfPets: 3, createdAt: '2024-04-15', tags: ['vip', 'multiple-pets', 'boarding-client', 'insurance'] },
+  { id: '11', name: 'Sofia Reyes', phone: '+51 999 123 789', email: 'sofia.reyes@email.com', address: '591 Sunset Ave, Miami, FL', numberOfPets: 1, createdAt: '2024-11-05', tags: ['new-client', 'puppy-kitten', 'grooming-regular'] },
+  { id: '12', name: 'James Wilson', phone: '+51 999 234 890', email: 'james.w@email.com', address: '702 Harbor Lane, Miami, FL', numberOfPets: 2, createdAt: '2024-08-03', tags: ['referral-source', 'frequent-visitor'] },
+  { id: '13', name: 'Isabella Martinez', phone: '+51 999 345 901', email: 'isabella.m@email.com', address: '813 Bay Street, Miami, FL', numberOfPets: 1, createdAt: '2024-10-22', tags: ['payment-pending', 'needs-followup'] },
+  { id: '14', name: 'William Brown', phone: '+51 999 456 012', email: 'william.b@email.com', address: '924 River Road, Miami, FL', numberOfPets: 4, createdAt: '2024-03-08', tags: ['vip', 'multiple-pets', 'breeder', 'insurance'] },
+  { id: '15', name: 'Camila Herrera', phone: '+51 999 567 123', email: 'camila.h@email.com', address: '135 Mountain View, Miami, FL', numberOfPets: 1, createdAt: '2024-12-10', tags: ['new-client', 'referral-source'] },
+  { id: '16', name: 'Alexander Davis', phone: '+51 999 678 234', email: 'alex.davis@email.com', address: '246 Valley Drive, Miami, FL', numberOfPets: 2, createdAt: '2024-06-30', tags: ['boarding-client', 'grooming-regular', 'multiple-pets'] },
+  { id: '17', name: 'Valentina Ruiz', phone: '+51 999 789 345', email: 'valentina.r@email.com', address: '357 Garden Lane, Miami, FL', numberOfPets: 1, createdAt: '2024-07-14', tags: ['senior-pet', 'dental-care', 'special-needs'] },
+  { id: '18', name: 'Christopher Taylor', phone: '+51 999 890 456', email: 'chris.taylor@email.com', address: '468 Forest Path, Miami, FL', numberOfPets: 2, createdAt: '2024-12-18', tags: ['new-client', 'puppy-kitten', 'insurance'] },
 ];
 
 export const initialPets: Pet[] = [
+  // Original 10 pets
   { id: '1', name: 'Luna', species: 'Dog', breed: 'Golden Retriever', age: 3, ownerId: '1', ownerName: 'María García', allergies: 'None', vaccinations: 'Up to date', notes: 'Very friendly, loves treats' },
   { id: '2', name: 'Max', species: 'Cat', breed: 'Persian', age: 5, ownerId: '1', ownerName: 'María García', allergies: 'Chicken', vaccinations: 'Up to date', notes: 'Indoor cat only' },
   { id: '3', name: 'Buddy', species: 'Dog', breed: 'Labrador', age: 2, ownerId: '2', ownerName: 'John Smith', allergies: 'None', vaccinations: 'Needs rabies booster', notes: 'High energy' },
@@ -152,6 +188,29 @@ export const initialPets: Pet[] = [
   { id: '8', name: 'Oliver', species: 'Cat', breed: 'British Shorthair', age: 3, ownerId: '5', ownerName: 'Sarah Johnson', allergies: 'Dairy', vaccinations: 'Up to date', notes: 'Overweight - on diet' },
   { id: '9', name: 'Bella', species: 'Dog', breed: 'Beagle', age: 5, ownerId: '5', ownerName: 'Sarah Johnson', allergies: 'None', vaccinations: 'Up to date', notes: 'Loves to howl' },
   { id: '10', name: 'Simba', species: 'Cat', breed: 'Orange Tabby', age: 2, ownerId: '6', ownerName: 'Roberto Fernández', allergies: 'None', vaccinations: 'Up to date', notes: 'Very playful' },
+  
+  // New pets for new clients
+  { id: '11', name: 'Daisy', species: 'Dog', breed: 'French Bulldog', age: 2, ownerId: '7', ownerName: 'Emily Watson', allergies: 'Grain', vaccinations: 'Up to date', notes: 'Snores loudly, very affectionate' },
+  { id: '12', name: 'Thor', species: 'Dog', breed: 'Rottweiler', age: 4, ownerId: '8', ownerName: 'Miguel Torres', allergies: 'None', vaccinations: 'Up to date', notes: 'Well trained, gentle giant' },
+  { id: '13', name: 'Nala', species: 'Dog', breed: 'Rottweiler', age: 3, ownerId: '8', ownerName: 'Miguel Torres', allergies: 'None', vaccinations: 'Up to date', notes: 'Thor\'s sister, breeding female' },
+  { id: '14', name: 'Ginger', species: 'Cat', breed: 'Ragdoll', age: 12, ownerId: '9', ownerName: 'Jennifer Lee', allergies: 'Fish', vaccinations: 'Up to date', notes: 'Senior cat, arthritis medication' },
+  { id: '15', name: 'Duke', species: 'Dog', breed: 'Great Dane', age: 5, ownerId: '10', ownerName: 'David Kim', allergies: 'None', vaccinations: 'Up to date', notes: 'Gentle giant, needs large space' },
+  { id: '16', name: 'Princess', species: 'Cat', breed: 'Scottish Fold', age: 3, ownerId: '10', ownerName: 'David Kim', allergies: 'None', vaccinations: 'Up to date', notes: 'Very vocal, loves attention' },
+  { id: '17', name: 'Shadow', species: 'Cat', breed: 'Black Domestic', age: 2, ownerId: '10', ownerName: 'David Kim', allergies: 'None', vaccinations: 'Up to date', notes: 'Shy but sweet' },
+  { id: '18', name: 'Mochi', species: 'Dog', breed: 'Shiba Inu', age: 1, ownerId: '11', ownerName: 'Sofia Reyes', allergies: 'None', vaccinations: 'Puppy series in progress', notes: 'Still in training, very smart' },
+  { id: '19', name: 'Charlie', species: 'Dog', breed: 'Cocker Spaniel', age: 7, ownerId: '12', ownerName: 'James Wilson', allergies: 'Pork', vaccinations: 'Up to date', notes: 'Ear infections history' },
+  { id: '20', name: 'Pepper', species: 'Cat', breed: 'Tuxedo', age: 4, ownerId: '12', ownerName: 'James Wilson', allergies: 'None', vaccinations: 'Up to date', notes: 'Indoor/outdoor cat' },
+  { id: '21', name: 'Lola', species: 'Dog', breed: 'Chihuahua', age: 3, ownerId: '13', ownerName: 'Isabella Martinez', allergies: 'None', vaccinations: 'Needs booster', notes: 'Nervous around other dogs' },
+  { id: '22', name: 'Zeus', species: 'Dog', breed: 'Doberman', age: 5, ownerId: '14', ownerName: 'William Brown', allergies: 'None', vaccinations: 'Up to date', notes: 'Show dog, excellent temperament' },
+  { id: '23', name: 'Athena', species: 'Dog', breed: 'Doberman', age: 4, ownerId: '14', ownerName: 'William Brown', allergies: 'None', vaccinations: 'Up to date', notes: 'Breeding female, champion bloodline' },
+  { id: '24', name: 'Apollo', species: 'Dog', breed: 'Doberman', age: 2, ownerId: '14', ownerName: 'William Brown', allergies: 'Chicken', vaccinations: 'Up to date', notes: 'Young male, in training' },
+  { id: '25', name: 'Cleo', species: 'Cat', breed: 'Sphynx', age: 3, ownerId: '14', ownerName: 'William Brown', allergies: 'None', vaccinations: 'Up to date', notes: 'Needs regular skin care' },
+  { id: '26', name: 'Biscuit', species: 'Dog', breed: 'Corgi', age: 1, ownerId: '15', ownerName: 'Camila Herrera', allergies: 'None', vaccinations: 'Puppy series complete', notes: 'Full of energy, loves to play' },
+  { id: '27', name: 'Tucker', species: 'Dog', breed: 'Australian Shepherd', age: 4, ownerId: '16', ownerName: 'Alexander Davis', allergies: 'None', vaccinations: 'Up to date', notes: 'Very active, needs lots of exercise' },
+  { id: '28', name: 'Maple', species: 'Cat', breed: 'Calico', age: 6, ownerId: '16', ownerName: 'Alexander Davis', allergies: 'Beef', vaccinations: 'Up to date', notes: 'Calm and independent' },
+  { id: '29', name: 'Rosie', species: 'Dog', breed: 'Cavalier King Charles', age: 10, ownerId: '17', ownerName: 'Valentina Ruiz', allergies: 'None', vaccinations: 'Up to date', notes: 'Heart murmur, on medication' },
+  { id: '30', name: 'Scout', species: 'Dog', breed: 'Border Collie', age: 1, ownerId: '18', ownerName: 'Christopher Taylor', allergies: 'None', vaccinations: 'Puppy series in progress', notes: 'Extremely intelligent, learning tricks' },
+  { id: '31', name: 'Willow', species: 'Cat', breed: 'Norwegian Forest', age: 1, ownerId: '18', ownerName: 'Christopher Taylor', allergies: 'None', vaccinations: 'Kitten series complete', notes: 'Long fur, needs regular brushing' },
 ];
 
 export const initialAppointments: Appointment[] = [
@@ -269,7 +328,7 @@ export const initialSegments: Segment[] = [
     name: 'New Clients (Last 30 Days)',
     description: 'Clients who joined in the last 30 days',
     filters: [{ field: 'createdAt', operator: 'daysAgo', value: 30 }],
-    clientCount: 2,
+    clientCount: 4,
     createdAt: '2025-01-01T00:00:00',
     isSystem: true,
   },
@@ -278,7 +337,7 @@ export const initialSegments: Segment[] = [
     name: 'Vaccination Due',
     description: 'Pets with vaccinations due soon',
     filters: [{ field: 'all', operator: 'equals', value: 'vaccination_due' }],
-    clientCount: 3,
+    clientCount: 5,
     createdAt: '2025-01-01T00:00:00',
     isSystem: true,
   },
@@ -287,7 +346,7 @@ export const initialSegments: Segment[] = [
     name: 'Inactive Clients (90+ Days)',
     description: 'Clients with no visit in the last 90 days',
     filters: [{ field: 'lastVisit', operator: 'daysAgo', value: 90 }],
-    clientCount: 2,
+    clientCount: 4,
     createdAt: '2025-01-01T00:00:00',
     isSystem: true,
   },
@@ -296,7 +355,7 @@ export const initialSegments: Segment[] = [
     name: 'Dog Owners',
     description: 'All clients with at least one dog',
     filters: [{ field: 'species', operator: 'equals', value: 'Dog' }],
-    clientCount: 4,
+    clientCount: 14,
     createdAt: '2025-01-01T00:00:00',
     isSystem: true,
   },
@@ -305,7 +364,7 @@ export const initialSegments: Segment[] = [
     name: 'Cat Owners',
     description: 'All clients with at least one cat',
     filters: [{ field: 'species', operator: 'equals', value: 'Cat' }],
-    clientCount: 4,
+    clientCount: 10,
     createdAt: '2025-01-01T00:00:00',
     isSystem: true,
   },
@@ -314,7 +373,7 @@ export const initialSegments: Segment[] = [
     name: 'Multiple Pet Owners',
     description: 'Clients with 2 or more pets',
     filters: [{ field: 'petCount', operator: 'greaterThan', value: 1 }],
-    clientCount: 3,
+    clientCount: 8,
     createdAt: '2025-01-01T00:00:00',
     isSystem: true,
   },
