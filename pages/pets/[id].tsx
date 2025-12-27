@@ -11,6 +11,7 @@ import {
   CalendarIcon,
   PhoneIcon,
   EmailIcon,
+  RoseIcon,
 } from '@/components/icons/Icons';
 import { format } from 'date-fns';
 
@@ -28,6 +29,7 @@ const EditPetForm: React.FC<{
     allergies: pet.allergies,
     vaccinations: pet.vaccinations,
     notes: pet.notes,
+    passedAway: pet.passedAway || false,
   });
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
 
@@ -127,6 +129,19 @@ const EditPetForm: React.FC<{
         </select>
       </div>
       
+      <div className="flex items-center gap-3">
+        <input
+          type="checkbox"
+          id="passedAway"
+          checked={formData.passedAway}
+          onChange={(e) => setFormData({ ...formData, passedAway: e.target.checked })}
+          className="w-4 h-4 text-primary-600 bg-slate-100 border-slate-300 rounded focus:ring-primary-500 dark:focus:ring-primary-600 dark:ring-offset-slate-800 focus:ring-2 dark:bg-slate-700 dark:border-slate-600"
+        />
+        <label htmlFor="passedAway" className="text-sm font-medium text-slate-700 dark:text-slate-300">
+          This pet has passed away
+        </label>
+      </div>
+
       <div>
         <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
           {t('notes')}
@@ -190,17 +205,32 @@ export default function PetDetailPage() {
           <ChevronLeftIcon className="w-5 h-5 text-slate-600 dark:text-slate-400" />
         </button>
         <div className={`w-16 h-16 rounded-2xl flex items-center justify-center shadow-lg ${
-          pet.species === 'Dog'
+          pet.passedAway
+            ? 'bg-gradient-to-br from-slate-400 to-slate-600 shadow-slate-500/30'
+            : pet.species === 'Dog'
             ? 'bg-gradient-to-br from-amber-400 to-amber-600 shadow-amber-500/30'
             : 'bg-gradient-to-br from-purple-400 to-purple-600 shadow-purple-500/30'
         }`}>
-          <PetIcon className="w-8 h-8 text-white" />
+          {pet.passedAway ? (
+            <RoseIcon className="w-8 h-8 text-slate-100" />
+          ) : (
+            <PetIcon className="w-8 h-8 text-white" />
+          )}
         </div>
         <div className="flex-1">
-          <h1 className="text-3xl font-display font-bold text-slate-800 dark:text-white">
+          <h1 className={`text-3xl font-display font-bold ${
+            pet.passedAway
+              ? 'text-slate-600 dark:text-slate-300'
+              : 'text-slate-800 dark:text-white'
+          }`}>
             {pet.name}
+            {pet.passedAway && <span className="ml-2 text-rose-500">✝</span>}
           </h1>
-          <p className="text-slate-500 dark:text-slate-400 mt-1">
+          <p className={`mt-1 ${
+            pet.passedAway
+              ? 'text-slate-500 dark:text-slate-400'
+              : 'text-slate-500 dark:text-slate-400'
+          }`}>
             {pet.breed} · {pet.age} {t('yearsOld')}
           </p>
         </div>
@@ -217,35 +247,95 @@ export default function PetDetailPage() {
         {/* Left Column - Pet Info & Medical */}
         <div className="lg:col-span-2 space-y-6">
           {/* Pet Details */}
-          <div className="card">
-            <h2 className="text-lg font-semibold text-slate-800 dark:text-white mb-4">
+          <div className={`card ${
+            pet.passedAway
+              ? 'bg-slate-50 dark:bg-slate-800/50 border-slate-300 dark:border-slate-600'
+              : ''
+          }`}>
+            <h2 className={`text-lg font-semibold mb-4 ${
+              pet.passedAway
+                ? 'text-slate-600 dark:text-slate-300'
+                : 'text-slate-800 dark:text-white'
+            }`}>
               {t('petDetails')}
             </h2>
             <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
               <div>
-                <p className="text-sm text-slate-500 dark:text-slate-400">{t('species')}</p>
-                <p className="font-medium text-slate-800 dark:text-white mt-1">
+                <p className={`text-sm ${
+                  pet.passedAway
+                    ? 'text-slate-400 dark:text-slate-500'
+                    : 'text-slate-500 dark:text-slate-400'
+                }`}>
+                  {t('species')}
+                </p>
+                <p className={`font-medium mt-1 ${
+                  pet.passedAway
+                    ? 'text-slate-600 dark:text-slate-300'
+                    : 'text-slate-800 dark:text-white'
+                }`}>
                   {t(pet.species.toLowerCase() as 'dog' | 'cat')}
                 </p>
               </div>
               <div>
-                <p className="text-sm text-slate-500 dark:text-slate-400">{t('breed')}</p>
-                <p className="font-medium text-slate-800 dark:text-white mt-1">{pet.breed}</p>
+                <p className={`text-sm ${
+                  pet.passedAway
+                    ? 'text-slate-400 dark:text-slate-500'
+                    : 'text-slate-500 dark:text-slate-400'
+                }`}>
+                  {t('breed')}
+                </p>
+                <p className={`font-medium mt-1 ${
+                  pet.passedAway
+                    ? 'text-slate-600 dark:text-slate-300'
+                    : 'text-slate-800 dark:text-white'
+                }`}>
+                  {pet.breed}
+                </p>
               </div>
               <div>
-                <p className="text-sm text-slate-500 dark:text-slate-400">{t('age')}</p>
-                <p className="font-medium text-slate-800 dark:text-white mt-1">
+                <p className={`text-sm ${
+                  pet.passedAway
+                    ? 'text-slate-400 dark:text-slate-500'
+                    : 'text-slate-500 dark:text-slate-400'
+                }`}>
+                  {t('age')}
+                </p>
+                <p className={`font-medium mt-1 ${
+                  pet.passedAway
+                    ? 'text-slate-600 dark:text-slate-300'
+                    : 'text-slate-800 dark:text-white'
+                }`}>
                   {pet.age} {t('yearsOld')}
                 </p>
               </div>
               <div>
-                <p className="text-sm text-slate-500 dark:text-slate-400">{t('allergies')}</p>
-                <p className="font-medium text-slate-800 dark:text-white mt-1">{pet.allergies}</p>
+                <p className={`text-sm ${
+                  pet.passedAway
+                    ? 'text-slate-400 dark:text-slate-500'
+                    : 'text-slate-500 dark:text-slate-400'
+                }`}>
+                  {t('allergies')}
+                </p>
+                <p className={`font-medium mt-1 ${
+                  pet.passedAway
+                    ? 'text-slate-600 dark:text-slate-300'
+                    : 'text-slate-800 dark:text-white'
+                }`}>
+                  {pet.allergies}
+                </p>
               </div>
               <div>
-                <p className="text-sm text-slate-500 dark:text-slate-400">{t('vaccinations')}</p>
+                <p className={`text-sm ${
+                  pet.passedAway
+                    ? 'text-slate-400 dark:text-slate-500'
+                    : 'text-slate-500 dark:text-slate-400'
+                }`}>
+                  {t('vaccinations')}
+                </p>
                 <span className={`inline-block mt-1 px-2 py-0.5 rounded-full text-xs font-medium ${
-                  pet.vaccinations === 'Up to date'
+                  pet.passedAway
+                    ? 'bg-slate-200 text-slate-500 dark:bg-slate-700 dark:text-slate-400'
+                    : pet.vaccinations === 'Up to date'
                     ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
                     : 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400'
                 }`}>
@@ -255,8 +345,20 @@ export default function PetDetailPage() {
             </div>
             {pet.notes && (
               <div className="mt-4 pt-4 border-t border-slate-200 dark:border-slate-700">
-                <p className="text-sm text-slate-500 dark:text-slate-400">{t('notes')}</p>
-                <p className="text-slate-700 dark:text-slate-300 mt-1">{pet.notes}</p>
+                <p className={`text-sm ${
+                  pet.passedAway
+                    ? 'text-slate-400 dark:text-slate-500'
+                    : 'text-slate-500 dark:text-slate-400'
+                }`}>
+                  {t('notes')}
+                </p>
+                <p className={`mt-1 ${
+                  pet.passedAway
+                    ? 'text-slate-600 dark:text-slate-300'
+                    : 'text-slate-700 dark:text-slate-300'
+                }`}>
+                  {pet.notes}
+                </p>
               </div>
             )}
           </div>

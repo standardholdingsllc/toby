@@ -6,6 +6,7 @@ import {
   EyeIcon,
   PetIcon,
   UserIcon,
+  RoseIcon,
 } from '@/components/icons/Icons';
 
 export default function PetsPage() {
@@ -17,7 +18,12 @@ export default function PetsPage() {
     let result = pets;
     
     if (speciesFilter !== 'all') {
-      result = result.filter((pet) => pet.species === speciesFilter);
+      if (speciesFilter === 'Other') {
+        const mainSpecies = ['Dog', 'Cat'];
+        result = result.filter((pet) => !mainSpecies.includes(pet.species));
+      } else {
+        result = result.filter((pet) => pet.species === speciesFilter);
+      }
     }
     
     if (searchQuery.trim()) {
@@ -33,11 +39,23 @@ export default function PetsPage() {
     return result;
   }, [pets, searchQuery, speciesFilter]);
 
-  const speciesCounts = useMemo(() => ({
-    all: pets.length,
-    Dog: pets.filter((p) => p.species === 'Dog').length,
-    Cat: pets.filter((p) => p.species === 'Cat').length,
-  }), [pets]);
+  const speciesCounts = useMemo(() => {
+    const counts: { [key: string]: number } = {
+      all: pets.length,
+      Dog: pets.filter((p) => p.species === 'Dog').length,
+      Cat: pets.filter((p) => p.species === 'Cat').length,
+    };
+    
+    // Count other species
+    const otherSpecies = ['Rabbit', 'Guinea Pig', 'Hamster', 'Bird', 'Turtle'];
+    let otherCount = 0;
+    otherSpecies.forEach(species => {
+      otherCount += pets.filter((p) => p.species === species).length;
+    });
+    counts['Other'] = otherCount;
+    
+    return counts;
+  }, [pets]);
 
   return (
     <div className="animate-fade-in">
@@ -64,8 +82,8 @@ export default function PetsPage() {
           />
         </div>
         
-        <div className="flex gap-2">
-          {(['all', 'Dog', 'Cat'] as const).map((species) => (
+        <div className="flex flex-wrap gap-2">
+          {(['all', 'Dog', 'Cat', 'Other'] as const).map((species) => (
             <button
               key={species}
               onClick={() => setSpeciesFilter(species)}
@@ -75,7 +93,7 @@ export default function PetsPage() {
                   : 'bg-white dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-600'
               }`}
             >
-              {species === 'all' ? 'All' : t(species.toLowerCase() as 'dog' | 'cat')} ({speciesCounts[species]})
+              {species === 'all' ? 'All' : species === 'Other' ? t('other') || 'Other' : t(species.toLowerCase() as 'dog' | 'cat')} ({speciesCounts[species]})
             </button>
           ))}
         </div>
@@ -86,15 +104,37 @@ export default function PetsPage() {
         {filteredPets.map((pet) => (
           <div
             key={pet.id}
-            className="card hover:shadow-xl transition-shadow group"
+            className={`card hover:shadow-xl transition-shadow group ${
+              pet.passedAway
+                ? 'bg-slate-50 dark:bg-slate-800/50 border-slate-300 dark:border-slate-600'
+                : ''
+            }`}
           >
             <div className="flex items-start justify-between mb-4">
               <div className={`w-14 h-14 rounded-2xl flex items-center justify-center ${
-                pet.species === 'Dog'
+                pet.passedAway
+                  ? 'bg-gradient-to-br from-slate-400 to-slate-600'
+                  : pet.species === 'Dog'
                   ? 'bg-gradient-to-br from-amber-400 to-amber-600'
-                  : 'bg-gradient-to-br from-purple-400 to-purple-600'
+                  : pet.species === 'Cat'
+                  ? 'bg-gradient-to-br from-purple-400 to-purple-600'
+                  : pet.species === 'Rabbit'
+                  ? 'bg-gradient-to-br from-pink-400 to-pink-600'
+                  : pet.species === 'Guinea Pig'
+                  ? 'bg-gradient-to-br from-orange-400 to-orange-600'
+                  : pet.species === 'Hamster'
+                  ? 'bg-gradient-to-br from-yellow-400 to-yellow-600'
+                  : pet.species === 'Bird'
+                  ? 'bg-gradient-to-br from-sky-400 to-sky-600'
+                  : pet.species === 'Turtle'
+                  ? 'bg-gradient-to-br from-teal-400 to-teal-600'
+                  : 'bg-gradient-to-br from-slate-400 to-slate-600'
               }`}>
-                <PetIcon className="w-7 h-7 text-white" />
+                {pet.passedAway ? (
+                  <RoseIcon className="w-7 h-7 text-slate-100" />
+                ) : (
+                  <PetIcon className="w-7 h-7 text-white" />
+                )}
               </div>
               <Link
                 href={`/pets/${pet.id}`}
@@ -104,18 +144,35 @@ export default function PetsPage() {
               </Link>
             </div>
 
-            <h3 className="text-lg font-semibold text-slate-800 dark:text-white mb-1">
+            <h3 className={`text-lg font-semibold mb-1 ${
+              pet.passedAway
+                ? 'text-slate-500 dark:text-slate-400'
+                : 'text-slate-800 dark:text-white'
+            }`}>
               {pet.name}
+              {pet.passedAway && <span className="ml-2 text-rose-500">✝</span>}
             </h3>
-            <p className="text-sm text-slate-500 dark:text-slate-400 mb-3">
+            <p className={`text-sm mb-3 ${
+              pet.passedAway
+                ? 'text-slate-400 dark:text-slate-500'
+                : 'text-slate-500 dark:text-slate-400'
+            }`}>
               {pet.breed} · {pet.age} {t('yearsOld')}
             </p>
 
-            <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400">
+            <div className={`flex items-center gap-2 text-sm ${
+              pet.passedAway
+                ? 'text-slate-500 dark:text-slate-500'
+                : 'text-slate-600 dark:text-slate-400'
+            }`}>
               <UserIcon className="w-4 h-4" />
               <Link
                 href={`/clients/${pet.ownerId}`}
-                className="hover:text-primary-500 transition-colors"
+                className={`transition-colors ${
+                  pet.passedAway
+                    ? 'hover:text-slate-600 dark:hover:text-slate-300'
+                    : 'hover:text-primary-500'
+                }`}
               >
                 {pet.ownerName}
               </Link>
@@ -123,9 +180,17 @@ export default function PetsPage() {
 
             <div className="mt-4 pt-4 border-t border-slate-200 dark:border-slate-700">
               <div className="flex items-center justify-between text-sm">
-                <span className="text-slate-500 dark:text-slate-400">{t('vaccinations')}</span>
+                <span className={`${
+                  pet.passedAway
+                    ? 'text-slate-400 dark:text-slate-500'
+                    : 'text-slate-500 dark:text-slate-400'
+                }`}>
+                  {t('vaccinations')}
+                </span>
                 <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
-                  pet.vaccinations === 'Up to date'
+                  pet.passedAway
+                    ? 'bg-slate-200 text-slate-500 dark:bg-slate-700 dark:text-slate-400'
+                    : pet.vaccinations === 'Up to date'
                     ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
                     : 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400'
                 }`}>
@@ -136,7 +201,11 @@ export default function PetsPage() {
 
             <Link
               href={`/pets/${pet.id}`}
-              className="mt-4 block text-center py-2 rounded-xl bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 font-medium hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors"
+              className={`mt-4 block text-center py-2 rounded-xl font-medium transition-colors ${
+                pet.passedAway
+                  ? 'bg-slate-200 dark:bg-slate-700 text-slate-500 dark:text-slate-400 hover:bg-slate-300 dark:hover:bg-slate-600'
+                  : 'bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600'
+              }`}
             >
               {t('viewDetails')}
             </Link>

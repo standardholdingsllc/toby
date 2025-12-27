@@ -17,8 +17,17 @@ export const UsersIcon: React.FC<IconProps> = ({ className = 'w-6 h-6' }) => (
 );
 
 export const PetIcon: React.FC<IconProps> = ({ className = 'w-6 h-6' }) => (
-  <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-    <path strokeLinecap="round" strokeLinejoin="round" d="M6.633 10.5c.806 0 1.533-.446 2.031-1.08a9.041 9.041 0 012.861-2.4c.723-.384 1.35-.956 1.653-1.715a4.498 4.498 0 00.322-1.672V3a.75.75 0 01.75-.75A2.25 2.25 0 0116.5 4.5c0 1.152-.26 2.243-.723 3.218-.266.558.107 1.282.725 1.282h3.126c1.026 0 1.945.694 2.054 1.715.045.422.068.85.068 1.285a11.95 11.95 0 01-2.649 7.521c-.388.482-.987.729-1.605.729H13.48c-.483 0-.964-.078-1.423-.23l-3.114-1.04a4.501 4.501 0 00-1.423-.23H3.75" />
+  <svg className={className} fill="currentColor" viewBox="0 0 24 24">
+    {/* Paw print icon - main pad */}
+    <ellipse cx="12" cy="17" rx="4" ry="3.5" />
+    {/* Top left toe */}
+    <ellipse cx="6.5" cy="10" rx="2" ry="2.5" />
+    {/* Top right toe */}
+    <ellipse cx="17.5" cy="10" rx="2" ry="2.5" />
+    {/* Middle left toe */}
+    <ellipse cx="8.5" cy="5.5" rx="1.8" ry="2.2" />
+    {/* Middle right toe */}
+    <ellipse cx="15.5" cy="5.5" rx="1.8" ry="2.2" />
   </svg>
 );
 
@@ -262,6 +271,12 @@ export const ExclamationTriangleIcon: React.FC<IconProps> = ({ className = 'w-6 
 export const LockClosedIcon: React.FC<IconProps> = ({ className = 'w-6 h-6' }) => (
   <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
     <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
+  </svg>
+);
+
+export const RoseIcon: React.FC<IconProps> = ({ className = 'w-6 h-6' }) => (
+  <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
   </svg>
 );
 
