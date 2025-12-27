@@ -39,7 +39,7 @@ function useScrollReveal() {
 }
 
 // Stats counter animation
-function AnimatedStat({ value, suffix = '', label }: { value: number; suffix?: string; label: string }) {
+function AnimatedStat({ value, prefix = '', suffix = '', label }: { value: number; prefix?: string; suffix?: string; label: string }) {
   const [count, setCount] = useState(0);
   const ref = useRef<HTMLDivElement>(null);
   const hasAnimated = useRef(false);
@@ -49,7 +49,6 @@ function AnimatedStat({ value, suffix = '', label }: { value: number; suffix?: s
       (entries) => {
         if (entries[0].isIntersecting && !hasAnimated.current) {
           hasAnimated.current = true;
-          let start = 0;
           const duration = 2000;
           const startTime = performance.now();
           
@@ -77,7 +76,7 @@ function AnimatedStat({ value, suffix = '', label }: { value: number; suffix?: s
   return (
     <div ref={ref} className="text-center">
       <div className="text-5xl lg:text-6xl font-display font-bold text-white mb-2">
-        {count.toLocaleString()}{suffix}
+        {prefix}{count.toLocaleString()}{suffix}
       </div>
       <div className="text-white/80 font-medium">{label}</div>
     </div>
@@ -520,10 +519,10 @@ export default function Home() {
         
         <div className="max-w-7xl mx-auto px-6 lg:px-8 relative z-10">
           <div className="grid md:grid-cols-4 gap-12">
-            <AnimatedStat value={3323} label={language === 'es' ? 'Clínicas en Perú' : 'Clinics in Peru'} />
-            <AnimatedStat value={53} suffix="%" label={language === 'es' ? 'Hogares con perros' : 'Households with dogs'} />
+            <AnimatedStat value={1900} prefix="S/" label={language === 'es' ? 'Aumento promedio de ingresos mensuales' : 'Avg. monthly revenue increase'} />
             <AnimatedStat value={150} suffix="+" label={language === 'es' ? 'Clínicas activas' : 'Active clinics'} />
-            <AnimatedStat value={40} suffix="%" label={language === 'es' ? 'Menos citas perdidas' : 'Fewer no-shows'} />
+            <AnimatedStat value={15} suffix="%" label={language === 'es' ? 'Menos citas perdidas' : 'Fewer lost appointments'} />
+            <AnimatedStat value={25} suffix="%" label={language === 'es' ? 'Mayor retención de clientes' : 'Increased customer retention'} />
           </div>
         </div>
       </section>
