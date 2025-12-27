@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import Link from 'next/link';
 import { useApp } from '@/context/AppContext';
 import Modal from '@/components/Modal';
 import {
@@ -439,9 +440,12 @@ export default function CalendarPage() {
 
             <div>
               <p className="text-sm text-slate-500 dark:text-slate-400">{t('owner')}</p>
-              <p className="font-medium text-slate-800 dark:text-white">
+              <Link
+                href={`/clients/${selectedAppointment.ownerId}`}
+                className="font-medium text-slate-800 dark:text-white hover:text-primary-600 dark:hover:text-primary-400 transition-colors"
+              >
                 {selectedAppointment.ownerName}
-              </p>
+              </Link>
             </div>
 
             {selectedAppointment.notes && (

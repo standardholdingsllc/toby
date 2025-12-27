@@ -1,4 +1,5 @@
 import React, { useMemo } from 'react';
+import Link from 'next/link';
 import { useApp } from '@/context/AppContext';
 import {
   DollarIcon,
@@ -330,7 +331,12 @@ export default function DashboardPage() {
                       {apt.petName} - {apt.type}
                     </p>
                     <p className="text-sm text-slate-500 dark:text-slate-400">
-                      {apt.ownerName} · {apt.date} at {apt.time}
+                      <Link
+                        href={`/clients/${apt.ownerId}`}
+                        className="hover:text-primary-500 transition-colors"
+                      >
+                        {apt.ownerName}
+                      </Link> · {apt.date} at {apt.time}
                     </p>
                   </div>
                   <span className="px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400">

@@ -65,7 +65,7 @@ const AddUserForm: React.FC<{
           value={formData.email}
           onChange={(e) => setFormData({ ...formData, email: e.target.value })}
           className="input-field"
-          placeholder="email@vetcare.com"
+          placeholder="email@toby.com"
         />
         {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email}</p>}
       </div>

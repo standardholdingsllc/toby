@@ -4,7 +4,7 @@ export default function Document() {
   return (
     <Html lang="en">
       <Head>
-        <meta name="description" content="VetCare - Veterinary Clinic Management System" />
+        <meta name="description" content="Toby - Veterinary Clinic Management System" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
       <body>

@@ -1,8 +1,8 @@
-# VetCare - Veterinary Clinic Management Demo
+# Toby - Veterinary Clinic Management Demo
 
 A comprehensive demo web application for veterinary clinic management built with Next.js, TypeScript, and Tailwind CSS.
 
-![VetCare Demo](https://img.shields.io/badge/Demo-VetCare-22c55e)
+![Toby Demo](https://img.shields.io/badge/Demo-Toby-22c55e)
 ![Next.js](https://img.shields.io/badge/Next.js-14.2-black)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.4-blue)
 ![Tailwind CSS](https://img.shields.io/badge/Tailwind-3.4-38bdf8)

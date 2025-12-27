@@ -70,12 +70,12 @@ export interface MedicalRecord {
 
 // Initial Mock Data
 export const initialClients: Client[] = [
-  { id: '1', name: 'María García', phone: '+1 555-0101', email: 'maria.garcia@email.com', address: '123 Oak Street, Miami, FL', numberOfPets: 2, createdAt: '2024-06-15' },
-  { id: '2', name: 'John Smith', phone: '+1 555-0102', email: 'john.smith@email.com', address: '456 Pine Avenue, Miami, FL', numberOfPets: 1, createdAt: '2024-08-22' },
-  { id: '3', name: 'Ana Rodríguez', phone: '+1 555-0103', email: 'ana.rodriguez@email.com', address: '789 Maple Drive, Miami, FL', numberOfPets: 3, createdAt: '2024-09-10' },
-  { id: '4', name: 'Carlos Mendez', phone: '+1 555-0104', email: 'carlos.mendez@email.com', address: '321 Cedar Lane, Miami, FL', numberOfPets: 1, createdAt: '2024-10-05' },
-  { id: '5', name: 'Sarah Johnson', phone: '+1 555-0105', email: 'sarah.j@email.com', address: '654 Birch Road, Miami, FL', numberOfPets: 2, createdAt: '2024-11-18' },
-  { id: '6', name: 'Roberto Fernández', phone: '+1 555-0106', email: 'roberto.f@email.com', address: '987 Elm Court, Miami, FL', numberOfPets: 1, createdAt: '2024-12-01' },
+  { id: '1', name: 'María García', phone: '+51 999 123 456', email: 'maria.garcia@email.com', address: '123 Oak Street, Miami, FL', numberOfPets: 2, createdAt: '2024-06-15' },
+  { id: '2', name: 'John Smith', phone: '+51 999 234 567', email: 'john.smith@email.com', address: '456 Pine Avenue, Miami, FL', numberOfPets: 1, createdAt: '2024-08-22' },
+  { id: '3', name: 'Ana Rodríguez', phone: '+51 999 345 678', email: 'ana.rodriguez@email.com', address: '789 Maple Drive, Miami, FL', numberOfPets: 3, createdAt: '2024-09-10' },
+  { id: '4', name: 'Carlos Mendez', phone: '+51 999 456 789', email: 'carlos.mendez@email.com', address: '321 Cedar Lane, Miami, FL', numberOfPets: 1, createdAt: '2024-10-05' },
+  { id: '5', name: 'Sarah Johnson', phone: '+51 999 567 890', email: 'sarah.j@email.com', address: '654 Birch Road, Miami, FL', numberOfPets: 2, createdAt: '2024-11-18' },
+  { id: '6', name: 'Roberto Fernández', phone: '+51 999 678 901', email: 'roberto.f@email.com', address: '987 Elm Court, Miami, FL', numberOfPets: 1, createdAt: '2024-12-01' },
 ];
 
 export const initialPets: Pet[] = [
@@ -128,15 +128,15 @@ export const initialMessages: { [clientId: string]: Message[] } = {
 };
 
 export const initialCampaigns: Campaign[] = [
-  { id: '1', channel: 'email', message: '🎄 Season\'s Greetings from VetCare Clinic! Wishing you and your furry friends a wonderful holiday season. Don\'t forget to schedule your pet\'s annual check-up!', recipients: 120, sentAt: '2025-12-01T10:00:00' },
+  { id: '1', channel: 'email', message: '🎄 Season\'s Greetings from Toby Clinic! Wishing you and your furry friends a wonderful holiday season. Don\'t forget to schedule your pet\'s annual check-up!', recipients: 120, sentAt: '2025-12-01T10:00:00' },
   { id: '2', channel: 'whatsapp', message: '🐕 Reminder: January is Dental Health Month! Book your pet\'s dental cleaning this month and get 15% off. Reply YES to schedule.', recipients: 85, sentAt: '2025-12-15T09:00:00' },
 ];
 
 export const initialUsers: User[] = [
-  { id: '1', name: 'Dr. Juan Pérez', email: 'juan.perez@vetcare.com', role: 'admin' },
-  { id: '2', name: 'Dr. Emily Chen', email: 'emily.chen@vetcare.com', role: 'veterinarian' },
-  { id: '3', name: 'Sofia Martinez', email: 'sofia.martinez@vetcare.com', role: 'receptionist' },
-  { id: '4', name: 'Dr. Michael Brown', email: 'michael.brown@vetcare.com', role: 'veterinarian' },
+  { id: '1', name: 'Dr. Juan Pérez', email: 'juan.perez@toby.com', role: 'admin' },
+  { id: '2', name: 'Dr. Emily Chen', email: 'emily.chen@toby.com', role: 'veterinarian' },
+  { id: '3', name: 'Sofia Martinez', email: 'sofia.martinez@toby.com', role: 'receptionist' },
+  { id: '4', name: 'Dr. Michael Brown', email: 'michael.brown@toby.com', role: 'veterinarian' },
 ];
 
 export const initialMedicalRecords: MedicalRecord[] = [

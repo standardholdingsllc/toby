@@ -16,7 +16,7 @@ export const translations = {
     logout: 'Logout',
     
     // Common
-    appName: 'VetCare',
+    appName: 'Toby',
     appTagline: 'Clinic Management',
     search: 'Search',
     searchPlaceholder: 'Search...',
@@ -237,7 +237,7 @@ export const translations = {
     logout: 'Cerrar Sesión',
     
     // Common
-    appName: 'VetCare',
+    appName: 'Toby',
     appTagline: 'Gestión de Clínica',
     search: 'Buscar',
     searchPlaceholder: 'Buscar...',
