@@ -34,8 +34,8 @@ module.exports = {
         }
       },
       fontFamily: {
-        sans: ['Outfit', 'system-ui', 'sans-serif'],
-        display: ['Fraunces', 'Georgia', 'serif'],
+        sans: ['Plus Jakarta Sans', 'system-ui', 'sans-serif'],
+        display: ['DM Serif Display', 'Georgia', 'serif'],
       },
       animation: {
         'fade-in': 'fadeIn 0.5s ease-out',
