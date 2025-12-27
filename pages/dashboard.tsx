@@ -8,8 +8,11 @@ import {
   PetIcon,
   RefreshIcon,
   ClockIcon,
+  BanknotesIcon,
+  ReceiptIcon,
+  ExclamationTriangleIcon,
 } from '@/components/icons/Icons';
-import { revenueData, appointmentsByMonth, appointmentsByType } from '@/data/mockData';
+import { revenueData, appointmentsByMonth, appointmentsByType, monthlyFinanceSummary } from '@/data/mockData';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -66,7 +69,7 @@ const StatCard: React.FC<{
 );
 
 export default function DashboardPage() {
-  const { t, clients, pets, appointments } = useApp();
+  const { t, clients, pets, appointments, financeRecords } = useApp();
 
   // Calculate stats
   const stats = useMemo(() => {
@@ -89,13 +92,33 @@ export default function DashboardPage() {
       return createdDate.getMonth() === thisMonth && createdDate.getFullYear() === thisYear;
     }).length;
     
+    // Calculate revenue from finance records
+    const thisMonthRecords = financeRecords.filter(r => {
+      const date = new Date(r.date);
+      return date.getMonth() === thisMonth && date.getFullYear() === thisYear;
+    });
+    
+    const revenueThisMonth = thisMonthRecords
+      .filter(r => r.status === 'paid')
+      .reduce((sum, r) => sum + r.amount, 0);
+    
+    const pendingAmount = financeRecords
+      .filter(r => r.status === 'pending')
+      .reduce((sum, r) => sum + r.amount, 0);
+    
+    const overdueAmount = financeRecords
+      .filter(r => r.status === 'overdue')
+      .reduce((sum, r) => sum + r.amount, 0);
+    
     return {
-      revenue: 'S/ 8,500',
+      revenue: `S/ ${revenueThisMonth.toLocaleString()}`,
       appointmentsThisWeek,
       newClientsThisMonth,
       totalPets: pets.length,
+      pendingAmount,
+      overdueAmount,
     };
-  }, [clients, pets, appointments]);
+  }, [clients, pets, appointments, financeRecords]);
 
   // Chart options
   const lineChartOptions = {
@@ -103,7 +126,12 @@ export default function DashboardPage() {
     maintainAspectRatio: false,
     plugins: {
       legend: {
-        display: false,
+        display: true,
+        position: 'top' as const,
+        labels: {
+          color: '#94a3b8',
+          usePointStyle: true,
+        },
       },
     },
     scales: {
@@ -170,18 +198,29 @@ export default function DashboardPage() {
     },
   };
 
-  // Chart data
+  // Chart data - using monthly finance summary for more accurate data
   const revenueChartData = {
-    labels: revenueData.map((d) => d.month),
+    labels: monthlyFinanceSummary.map((d) => d.month),
     datasets: [
       {
-        data: revenueData.map((d) => d.value),
+        label: 'Revenue',
+        data: monthlyFinanceSummary.map((d) => d.revenue),
         borderColor: '#22c55e',
         backgroundColor: 'rgba(34, 197, 94, 0.1)',
         fill: true,
         tension: 0.4,
         pointRadius: 4,
         pointBackgroundColor: '#22c55e',
+      },
+      {
+        label: 'Profit',
+        data: monthlyFinanceSummary.map((d) => d.profit),
+        borderColor: '#3b82f6',
+        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+        fill: true,
+        tension: 0.4,
+        pointRadius: 4,
+        pointBackgroundColor: '#3b82f6',
       },
     ],
   };
@@ -257,6 +296,55 @@ export default function DashboardPage() {
           color="bg-gradient-to-br from-amber-400 to-amber-600 shadow-lg shadow-amber-500/30"
         />
       </div>
+
+      {/* Finance Summary Cards */}
+      {(stats.pendingAmount > 0 || stats.overdueAmount > 0) && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
+          <Link href="/finance" className="card hover:shadow-lg transition-shadow cursor-pointer border-l-4 border-amber-500">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 rounded-2xl flex items-center justify-center bg-amber-100 dark:bg-amber-900/30">
+                <BanknotesIcon className="w-6 h-6 text-amber-600 dark:text-amber-400" />
+              </div>
+              <div>
+                <p className="text-2xl font-bold text-slate-800 dark:text-white">
+                  S/ {stats.pendingAmount.toLocaleString()}
+                </p>
+                <p className="text-sm text-slate-500 dark:text-slate-400">{t('pendingPayments')}</p>
+              </div>
+            </div>
+          </Link>
+          
+          {stats.overdueAmount > 0 && (
+            <Link href="/finance" className="card hover:shadow-lg transition-shadow cursor-pointer border-l-4 border-red-500">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-2xl flex items-center justify-center bg-red-100 dark:bg-red-900/30">
+                  <ExclamationTriangleIcon className="w-6 h-6 text-red-600 dark:text-red-400" />
+                </div>
+                <div>
+                  <p className="text-2xl font-bold text-slate-800 dark:text-white">
+                    S/ {stats.overdueAmount.toLocaleString()}
+                  </p>
+                  <p className="text-sm text-slate-500 dark:text-slate-400">{t('overduePayments')}</p>
+                </div>
+              </div>
+            </Link>
+          )}
+          
+          <Link href="/finance" className="card hover:shadow-lg transition-shadow cursor-pointer border-l-4 border-primary-500">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 rounded-2xl flex items-center justify-center bg-primary-100 dark:bg-primary-900/30">
+                <ReceiptIcon className="w-6 h-6 text-primary-600 dark:text-primary-400" />
+              </div>
+              <div>
+                <p className="text-2xl font-bold text-slate-800 dark:text-white">
+                  {financeRecords.filter(r => r.status === 'paid').length}
+                </p>
+                <p className="text-sm text-slate-500 dark:text-slate-400">{t('paidInvoices')}</p>
+              </div>
+            </div>
+          </Link>
+        </div>
+      )}
 
       {/* Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">

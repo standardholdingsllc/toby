@@ -12,8 +12,12 @@ import {
   PhoneIcon,
   EmailIcon,
   RoseIcon,
+  PlusIcon,
+  TrashIcon,
+  TagIcon,
 } from '@/components/icons/Icons';
 import { format } from 'date-fns';
+import { CustomProperty } from '@/data/mockData';
 
 const EditPetForm: React.FC<{
   pet: any;
@@ -168,9 +172,15 @@ const EditPetForm: React.FC<{
 export default function PetDetailPage() {
   const router = useRouter();
   const { id } = router.query;
-  const { t, pets, clients, appointments, medicalRecords, updatePet } = useApp();
+  const { t, pets, clients, appointments, medicalRecords, updatePet, addPetCustomProperty, updatePetCustomProperty, removePetCustomProperty } = useApp();
   
   const [showEditModal, setShowEditModal] = useState(false);
+  const [showAddPropertyModal, setShowAddPropertyModal] = useState(false);
+  const [newProperty, setNewProperty] = useState<Omit<CustomProperty, 'id'>>({
+    name: '',
+    value: '',
+    type: 'text',
+  });
 
   const pet = pets.find((p) => p.id === id);
   const owner = pet ? clients.find((c) => c.id === pet.ownerId) : null;
@@ -184,6 +194,14 @@ export default function PetDetailPage() {
   const handleEditPet = (data: any) => {
     updatePet(id as string, data);
     setShowEditModal(false);
+  };
+
+  const handleAddProperty = () => {
+    if (newProperty.name && newProperty.value) {
+      addPetCustomProperty(id as string, newProperty);
+      setNewProperty({ name: '', value: '', type: 'text' });
+      setShowAddPropertyModal(false);
+    }
   };
 
   if (!pet) {
@@ -363,6 +381,54 @@ export default function PetDetailPage() {
             )}
           </div>
 
+          {/* Custom Properties Section */}
+          <div className="card">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-semibold text-slate-800 dark:text-white flex items-center gap-2">
+                <TagIcon className="w-5 h-5 text-primary-500" />
+                {t('customProperties')}
+              </h2>
+              <button
+                onClick={() => setShowAddPropertyModal(true)}
+                className="btn-secondary text-sm flex items-center gap-1"
+              >
+                <PlusIcon className="w-4 h-4" />
+                {t('addProperty')}
+              </button>
+            </div>
+            
+            {(!pet.customProperties || pet.customProperties.length === 0) ? (
+              <p className="text-slate-500 dark:text-slate-400 text-center py-4">
+                {t('noCustomProperties')}
+              </p>
+            ) : (
+              <div className="space-y-3">
+                {pet.customProperties.map((prop) => (
+                  <div
+                    key={prop.id}
+                    className="flex items-center justify-between p-3 rounded-xl bg-slate-50 dark:bg-slate-700/50"
+                  >
+                    <div>
+                      <p className="text-sm text-slate-500 dark:text-slate-400">{prop.name}</p>
+                      <p className="font-medium text-slate-800 dark:text-white">{prop.value}</p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs px-2 py-0.5 rounded-full bg-slate-200 dark:bg-slate-600 text-slate-600 dark:text-slate-300">
+                        {t(`${prop.type}Type` as any) || prop.type}
+                      </span>
+                      <button
+                        onClick={() => removePetCustomProperty(id as string, prop.id)}
+                        className="p-1.5 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/30 text-red-500 transition-colors"
+                      >
+                        <TrashIcon className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
           {/* Medical History */}
           <div className="card">
             <h2 className="text-lg font-semibold text-slate-800 dark:text-white mb-4">
@@ -493,6 +559,95 @@ export default function PetDetailPage() {
           onSubmit={handleEditPet}
           onCancel={() => setShowEditModal(false)}
         />
+      </Modal>
+
+      {/* Add Custom Property Modal */}
+      <Modal
+        isOpen={showAddPropertyModal}
+        onClose={() => {
+          setShowAddPropertyModal(false);
+          setNewProperty({ name: '', value: '', type: 'text' });
+        }}
+        title={t('addProperty')}
+        size="sm"
+      >
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+              {t('propertyName')} *
+            </label>
+            <input
+              type="text"
+              value={newProperty.name}
+              onChange={(e) => setNewProperty(prev => ({ ...prev, name: e.target.value }))}
+              className="input-field"
+              placeholder="e.g., Microchip ID, Insurance Number..."
+            />
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+              {t('propertyType')}
+            </label>
+            <select
+              value={newProperty.type}
+              onChange={(e) => setNewProperty(prev => ({ ...prev, type: e.target.value as any }))}
+              className="input-field"
+            >
+              <option value="text">{t('textType')}</option>
+              <option value="number">{t('numberType')}</option>
+              <option value="date">{t('dateType')}</option>
+            </select>
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+              {t('propertyValue')} *
+            </label>
+            {newProperty.type === 'date' ? (
+              <input
+                type="date"
+                value={newProperty.value}
+                onChange={(e) => setNewProperty(prev => ({ ...prev, value: e.target.value }))}
+                className="input-field"
+              />
+            ) : newProperty.type === 'number' ? (
+              <input
+                type="number"
+                value={newProperty.value}
+                onChange={(e) => setNewProperty(prev => ({ ...prev, value: e.target.value }))}
+                className="input-field"
+              />
+            ) : (
+              <input
+                type="text"
+                value={newProperty.value}
+                onChange={(e) => setNewProperty(prev => ({ ...prev, value: e.target.value }))}
+                className="input-field"
+                placeholder="Enter value..."
+              />
+            )}
+          </div>
+          
+          <div className="flex justify-end gap-3 pt-4">
+            <button
+              onClick={() => {
+                setShowAddPropertyModal(false);
+                setNewProperty({ name: '', value: '', type: 'text' });
+              }}
+              className="btn-secondary"
+            >
+              {t('cancel')}
+            </button>
+            <button
+              onClick={handleAddProperty}
+              disabled={!newProperty.name || !newProperty.value}
+              className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {t('save')}
+            </button>
+          </div>
+        </div>
       </Modal>
     </div>
   );

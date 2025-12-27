@@ -115,7 +115,7 @@ const StatCard: React.FC<{
 );
 
 export default function MarketingPage() {
-  const { t, clients, pets, campaigns, segments, templates, workflows, addCampaign, updateWorkflow, addClientTag, removeClientTag } = useApp();
+  const { t, clients, pets, campaigns, segments, templates, workflows, addCampaign, updateWorkflow, addWorkflow, deleteWorkflow, addClientTag, removeClientTag } = useApp();
   const [activeTab, setActiveTab] = useState<TabType>('campaigns');
   const [channel, setChannel] = useState<'email' | 'whatsapp'>('email');
   const [subject, setSubject] = useState('');
@@ -148,6 +148,23 @@ export default function MarketingPage() {
   
   // Calendar State
   const [calendarMonth, setCalendarMonth] = useState(new Date());
+  
+  // Automation Builder State
+  const [showAutomationModal, setShowAutomationModal] = useState(false);
+  const [editingWorkflow, setEditingWorkflow] = useState<any>(null);
+  const [automationForm, setAutomationForm] = useState({
+    name: '',
+    description: '',
+    triggerType: 'days_before_appointment' as string,
+    triggerValue: 1,
+    actions: [] as Array<{
+      id: string;
+      type: 'send_email' | 'send_whatsapp';
+      templateId: string;
+      delayDays: number;
+    }>,
+    status: 'draft' as 'active' | 'paused' | 'draft',
+  });
   
   // All unique client tags from all clients
   const allClientTags = useMemo(() => {
@@ -453,6 +470,115 @@ export default function MarketingPage() {
       status: currentStatus === 'active' ? 'paused' : 'active'
     });
   };
+
+  // Automation Builder Handlers
+  const resetAutomationForm = () => {
+    setAutomationForm({
+      name: '',
+      description: '',
+      triggerType: 'days_before_appointment',
+      triggerValue: 1,
+      actions: [],
+      status: 'draft',
+    });
+    setEditingWorkflow(null);
+  };
+
+  const handleAddAutomationAction = () => {
+    const newAction = {
+      id: Date.now().toString(),
+      type: 'send_email' as const,
+      templateId: templates[0]?.id || '',
+      delayDays: 0,
+    };
+    setAutomationForm(prev => ({
+      ...prev,
+      actions: [...prev.actions, newAction],
+    }));
+  };
+
+  const handleRemoveAutomationAction = (actionId: string) => {
+    setAutomationForm(prev => ({
+      ...prev,
+      actions: prev.actions.filter(a => a.id !== actionId),
+    }));
+  };
+
+  const handleUpdateAutomationAction = (actionId: string, field: string, value: any) => {
+    setAutomationForm(prev => ({
+      ...prev,
+      actions: prev.actions.map(a => 
+        a.id === actionId ? { ...a, [field]: value } : a
+      ),
+    }));
+  };
+
+  const handleSaveAutomation = () => {
+    if (!automationForm.name || automationForm.actions.length === 0) return;
+    
+    const workflowData = {
+      name: automationForm.name,
+      description: automationForm.description,
+      trigger: {
+        type: automationForm.triggerType as any,
+        value: automationForm.triggerValue,
+      },
+      actions: automationForm.actions.map(a => ({
+        type: a.type,
+        templateId: a.templateId,
+        delayDays: a.delayDays,
+      })),
+      status: automationForm.status,
+    };
+    
+    if (editingWorkflow) {
+      updateWorkflow(editingWorkflow.id, workflowData);
+    } else {
+      addWorkflow(workflowData);
+    }
+    
+    setShowAutomationModal(false);
+    resetAutomationForm();
+  };
+
+  const handleEditWorkflow = (workflow: any) => {
+    setEditingWorkflow(workflow);
+    setAutomationForm({
+      name: workflow.name,
+      description: workflow.description,
+      triggerType: workflow.trigger.type,
+      triggerValue: workflow.trigger.value || 1,
+      actions: workflow.actions.map((a: any, idx: number) => ({
+        id: idx.toString(),
+        type: a.type,
+        templateId: a.templateId,
+        delayDays: a.delayDays || 0,
+      })),
+      status: workflow.status,
+    });
+    setShowAutomationModal(true);
+  };
+
+  const handleDuplicateWorkflow = (workflow: any) => {
+    addWorkflow({
+      name: `${workflow.name} (Copy)`,
+      description: workflow.description,
+      trigger: { ...workflow.trigger },
+      actions: [...workflow.actions],
+      status: 'draft',
+    });
+  };
+
+  const triggerTypes = [
+    { value: 'days_before_appointment', label: t('daysBeforeAppointment') },
+    { value: 'days_after_visit', label: t('daysAfterVisit') },
+    { value: 'pet_birthday', label: t('petBirthday') },
+    { value: 'vaccination_due', label: t('vaccinationDueIn') },
+    { value: 'new_client', label: t('newClientSignup') },
+    { value: 'inactive_client', label: t('inactiveFor') },
+    { value: 'payment_received', label: t('paymentReceived') || 'Payment received' },
+    { value: 'invoice_overdue', label: t('invoiceOverdue') || 'Invoice overdue' },
+  ];
 
   // Chart data for analytics
   const emailPerformanceData = {
@@ -1291,28 +1417,44 @@ export default function MarketingPage() {
   // Automations Tab
   const renderAutomationsTab = () => (
     <div className="space-y-6">
-      {/* Active Automations Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <StatCard
-          icon={<WorkflowIcon className="w-5 h-5 text-white" />}
-          label={t('activeAutomations')}
-          value={workflows.filter(w => w.status === 'active').length}
-          color="bg-gradient-to-br from-primary-400 to-primary-600"
-        />
-        <StatCard
-          icon={<SendIcon className="w-5 h-5 text-white" />}
-          label={t('totalSent')}
-          value={workflows.reduce((sum, w) => sum + w.stats.sent, 0)}
-          color="bg-gradient-to-br from-blue-400 to-blue-600"
-        />
-        <StatCard
-          icon={<EnvelopeOpenIcon className="w-5 h-5 text-white" />}
-          label={t('avgOpenRate')}
-          value={`${Math.round(
-            workflows.reduce((sum, w) => sum + (w.stats.sent > 0 ? (w.stats.opened / w.stats.sent) * 100 : 0), 0) / workflows.length
-          )}%`}
-          color="bg-gradient-to-br from-purple-400 to-purple-600"
-        />
+      {/* Header with Create Button */}
+      <div className="flex items-center justify-between">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 flex-1 mr-4">
+          <StatCard
+            icon={<WorkflowIcon className="w-5 h-5 text-white" />}
+            label={t('activeAutomations')}
+            value={workflows.filter(w => w.status === 'active').length}
+            color="bg-gradient-to-br from-primary-400 to-primary-600"
+          />
+          <StatCard
+            icon={<SendIcon className="w-5 h-5 text-white" />}
+            label={t('totalSent')}
+            value={workflows.reduce((sum, w) => sum + w.stats.sent, 0)}
+            color="bg-gradient-to-br from-blue-400 to-blue-600"
+          />
+          <StatCard
+            icon={<EnvelopeOpenIcon className="w-5 h-5 text-white" />}
+            label={t('avgOpenRate')}
+            value={`${Math.round(
+              workflows.reduce((sum, w) => sum + (w.stats.sent > 0 ? (w.stats.opened / w.stats.sent) * 100 : 0), 0) / Math.max(workflows.length, 1)
+            )}%`}
+            color="bg-gradient-to-br from-purple-400 to-purple-600"
+          />
+        </div>
+      </div>
+      
+      {/* Create Automation Button */}
+      <div className="flex justify-end">
+        <button
+          onClick={() => {
+            resetAutomationForm();
+            setShowAutomationModal(true);
+          }}
+          className="btn-primary flex items-center gap-2"
+        >
+          <PlusIcon className="w-5 h-5" />
+          {t('createAutomation')}
+        </button>
       </div>
 
       {/* Workflow List */}
@@ -1339,15 +1481,17 @@ export default function MarketingPage() {
                   </p>
                 </div>
               </div>
-              <span className={`text-xs font-medium px-2 py-1 rounded-full ${
-                workflow.status === 'active'
-                  ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
-                  : workflow.status === 'paused'
-                  ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400'
-                  : 'bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300'
-              }`}>
-                {t(workflow.status as any)}
-              </span>
+              <div className="flex items-center gap-2">
+                <span className={`text-xs font-medium px-2 py-1 rounded-full ${
+                  workflow.status === 'active'
+                    ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
+                    : workflow.status === 'paused'
+                    ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400'
+                    : 'bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300'
+                }`}>
+                  {t(workflow.status as any)}
+                </span>
+              </div>
             </div>
             
             {/* Trigger Info */}
@@ -1362,6 +1506,8 @@ export default function MarketingPage() {
                 {workflow.trigger.type === 'vaccination_due' && `${t('vaccinationDueIn')} ${workflow.trigger.value} ${t('days')}`}
                 {workflow.trigger.type === 'new_client' && t('newClientSignup')}
                 {workflow.trigger.type === 'inactive_client' && `${t('inactiveFor')} ${workflow.trigger.value}+ ${t('days')}`}
+                {workflow.trigger.type === 'payment_received' && (t('paymentReceived') || 'Payment received')}
+                {workflow.trigger.type === 'invoice_overdue' && `${t('invoiceOverdue') || 'Invoice overdue'} ${workflow.trigger.value}+ ${t('days')}`}
               </p>
             </div>
             
@@ -1397,27 +1543,54 @@ export default function MarketingPage() {
               </div>
             </div>
             
-            {/* Toggle Button */}
-            <button
-              onClick={() => toggleWorkflowStatus(workflow.id, workflow.status)}
-              className={`w-full flex items-center justify-center gap-2 py-2 rounded-xl font-medium transition-all ${
-                workflow.status === 'active'
-                  ? 'bg-amber-100 text-amber-700 hover:bg-amber-200 dark:bg-amber-900/30 dark:text-amber-400'
-                  : 'bg-primary-100 text-primary-700 hover:bg-primary-200 dark:bg-primary-900/30 dark:text-primary-400'
-              }`}
-            >
-              {workflow.status === 'active' ? (
-                <>
-                  <PauseIcon className="w-4 h-4" />
-                  {t('pauseWorkflow')}
-                </>
-              ) : (
-                <>
-                  <PlayIcon className="w-4 h-4" />
-                  {t('activateWorkflow')}
-                </>
-              )}
-            </button>
+            {/* Action Buttons */}
+            <div className="flex gap-2">
+              <button
+                onClick={() => toggleWorkflowStatus(workflow.id, workflow.status)}
+                className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-xl font-medium transition-all ${
+                  workflow.status === 'active'
+                    ? 'bg-amber-100 text-amber-700 hover:bg-amber-200 dark:bg-amber-900/30 dark:text-amber-400'
+                    : 'bg-primary-100 text-primary-700 hover:bg-primary-200 dark:bg-primary-900/30 dark:text-primary-400'
+                }`}
+              >
+                {workflow.status === 'active' ? (
+                  <>
+                    <PauseIcon className="w-4 h-4" />
+                    {t('pauseWorkflow')}
+                  </>
+                ) : (
+                  <>
+                    <PlayIcon className="w-4 h-4" />
+                    {t('activateWorkflow')}
+                  </>
+                )}
+              </button>
+              <button
+                onClick={() => handleEditWorkflow(workflow)}
+                className="p-2 rounded-xl bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors"
+                title={t('edit')}
+              >
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" />
+                </svg>
+              </button>
+              <button
+                onClick={() => handleDuplicateWorkflow(workflow)}
+                className="p-2 rounded-xl bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors"
+                title={t('duplicateAutomation') || 'Duplicate'}
+              >
+                <CopyIcon className="w-5 h-5" />
+              </button>
+              <button
+                onClick={() => deleteWorkflow(workflow.id)}
+                className="p-2 rounded-xl bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 hover:bg-red-200 dark:hover:bg-red-900/50 transition-colors"
+                title={t('delete')}
+              >
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
+                </svg>
+              </button>
+            </div>
           </div>
         ))}
       </div>
@@ -1908,6 +2081,214 @@ export default function MarketingPage() {
             >
               <SendIcon className="w-4 h-4" />
               {t('sendCampaign')}
+            </button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* Automation Builder Modal */}
+      <Modal
+        isOpen={showAutomationModal}
+        onClose={() => {
+          setShowAutomationModal(false);
+          resetAutomationForm();
+        }}
+        title={editingWorkflow ? t('editWorkflow') : t('createAutomation')}
+        size="lg"
+      >
+        <div className="space-y-6">
+          {/* Name and Description */}
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                {t('automationName') || 'Automation Name'} *
+              </label>
+              <input
+                type="text"
+                value={automationForm.name}
+                onChange={(e) => setAutomationForm(prev => ({ ...prev, name: e.target.value }))}
+                className="input-field"
+                placeholder="e.g., Birthday Reminder"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                {t('automationDescription') || 'Description'}
+              </label>
+              <textarea
+                value={automationForm.description}
+                onChange={(e) => setAutomationForm(prev => ({ ...prev, description: e.target.value }))}
+                className="input-field min-h-[60px]"
+                placeholder="Describe what this automation does..."
+              />
+            </div>
+          </div>
+
+          {/* Trigger Section */}
+          <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-700/50 border border-slate-200 dark:border-slate-600">
+            <h3 className="text-sm font-semibold text-slate-800 dark:text-white mb-3 flex items-center gap-2">
+              <BoltIcon className="w-4 h-4 text-amber-500" />
+              {t('workflowTrigger')}
+            </h3>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs text-slate-500 dark:text-slate-400 mb-1">
+                  {t('triggerType') || 'Trigger Type'}
+                </label>
+                <select
+                  value={automationForm.triggerType}
+                  onChange={(e) => setAutomationForm(prev => ({ ...prev, triggerType: e.target.value }))}
+                  className="input-field"
+                >
+                  {triggerTypes.map((trigger) => (
+                    <option key={trigger.value} value={trigger.value}>{trigger.label}</option>
+                  ))}
+                </select>
+              </div>
+              {!['pet_birthday', 'new_client', 'payment_received'].includes(automationForm.triggerType) && (
+                <div>
+                  <label className="block text-xs text-slate-500 dark:text-slate-400 mb-1">
+                    {t('days')}
+                  </label>
+                  <input
+                    type="number"
+                    value={automationForm.triggerValue}
+                    onChange={(e) => setAutomationForm(prev => ({ ...prev, triggerValue: parseInt(e.target.value) || 1 }))}
+                    min="1"
+                    className="input-field"
+                  />
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Actions Section */}
+          <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-700/50 border border-slate-200 dark:border-slate-600">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-sm font-semibold text-slate-800 dark:text-white flex items-center gap-2">
+                <SendIcon className="w-4 h-4 text-blue-500" />
+                {t('workflowActions')}
+              </h3>
+              <button
+                onClick={handleAddAutomationAction}
+                className="text-sm text-primary-600 dark:text-primary-400 hover:underline flex items-center gap-1"
+              >
+                <PlusIcon className="w-4 h-4" />
+                {t('addAction')}
+              </button>
+            </div>
+            
+            {automationForm.actions.length === 0 ? (
+              <p className="text-sm text-slate-500 dark:text-slate-400 text-center py-4">
+                No actions added yet. Add at least one action.
+              </p>
+            ) : (
+              <div className="space-y-3">
+                {automationForm.actions.map((action, index) => (
+                  <div key={action.id} className="flex items-start gap-3 p-3 rounded-lg bg-white dark:bg-slate-600/50 border border-slate-200 dark:border-slate-500">
+                    <div className="flex items-center justify-center w-6 h-6 rounded-full bg-primary-100 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400 text-xs font-bold">
+                      {index + 1}
+                    </div>
+                    <div className="flex-1 grid grid-cols-3 gap-3">
+                      <div>
+                        <label className="block text-xs text-slate-500 dark:text-slate-400 mb-1">
+                          {t('actionType') || 'Action'}
+                        </label>
+                        <select
+                          value={action.type}
+                          onChange={(e) => handleUpdateAutomationAction(action.id, 'type', e.target.value)}
+                          className="input-field text-sm"
+                        >
+                          <option value="send_email">📧 Send Email</option>
+                          <option value="send_whatsapp">💬 Send WhatsApp</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-xs text-slate-500 dark:text-slate-400 mb-1">
+                          {t('templates')}
+                        </label>
+                        <select
+                          value={action.templateId}
+                          onChange={(e) => handleUpdateAutomationAction(action.id, 'templateId', e.target.value)}
+                          className="input-field text-sm"
+                        >
+                          {templates
+                            .filter(t => t.channel === 'both' || t.channel === (action.type === 'send_email' ? 'email' : 'whatsapp'))
+                            .map((template) => (
+                              <option key={template.id} value={template.id}>{template.name}</option>
+                            ))}
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-xs text-slate-500 dark:text-slate-400 mb-1">
+                          {t('waitDays') || 'Delay (days)'}
+                        </label>
+                        <input
+                          type="number"
+                          value={action.delayDays}
+                          onChange={(e) => handleUpdateAutomationAction(action.id, 'delayDays', parseInt(e.target.value) || 0)}
+                          min="0"
+                          className="input-field text-sm"
+                        />
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => handleRemoveAutomationAction(action.id)}
+                      className="p-1.5 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/30 text-red-500"
+                    >
+                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Status */}
+          <div>
+            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+              {t('status')}
+            </label>
+            <div className="flex gap-2">
+              {(['draft', 'active', 'paused'] as const).map((status) => (
+                <button
+                  key={status}
+                  onClick={() => setAutomationForm(prev => ({ ...prev, status }))}
+                  className={`flex-1 py-2 px-4 rounded-xl font-medium transition-all ${
+                    automationForm.status === status
+                      ? status === 'active'
+                        ? 'bg-green-500 text-white'
+                        : status === 'paused'
+                        ? 'bg-amber-500 text-white'
+                        : 'bg-slate-500 text-white'
+                      : 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600'
+                  }`}
+                >
+                  {t(status as any)}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Actions */}
+          <div className="flex justify-end gap-3 pt-4 border-t border-slate-200 dark:border-slate-700">
+            <button
+              onClick={() => {
+                setShowAutomationModal(false);
+                resetAutomationForm();
+              }}
+              className="btn-secondary"
+            >
+              {t('cancel')}
+            </button>
+            <button
+              onClick={handleSaveAutomation}
+              disabled={!automationForm.name || automationForm.actions.length === 0}
+              className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {t('save')}
             </button>
           </div>
         </div>
