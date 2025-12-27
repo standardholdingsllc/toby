@@ -66,11 +66,11 @@ interface AppContextType {
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  // Language state
-  const [language, setLanguage] = useState<Language>('en');
+  // Language state - default to Spanish
+  const [language, setLanguage] = useState<Language>('es');
   
-  // Theme state
-  const [darkMode, setDarkMode] = useState(false);
+  // Theme state - default to dark mode
+  const [darkMode, setDarkMode] = useState(true);
   
   // Current user
   const [currentUser, setCurrentUser] = useState<User>(initialUsers[0]);

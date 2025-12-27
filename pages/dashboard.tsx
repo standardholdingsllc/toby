@@ -89,7 +89,7 @@ export default function DashboardPage() {
     }).length;
     
     return {
-      revenue: '$8,500',
+      revenue: 'S/ 8,500',
       appointmentsThisWeek,
       newClientsThisMonth,
       totalPets: pets.length,
@@ -120,7 +120,7 @@ export default function DashboardPage() {
         },
         ticks: {
           color: '#94a3b8',
-          callback: (value: number | string) => `$${Number(value) / 1000}k`,
+          callback: (value: number | string) => `S/ ${Number(value) / 1000}k`,
         },
       },
     },

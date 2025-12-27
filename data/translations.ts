@@ -164,6 +164,22 @@ export const translations = {
     updateProfile: 'Update Profile',
     profileUpdated: 'Profile updated successfully!',
     
+    // Billing
+    billing: 'Billing',
+    paymentMethod: 'Payment Method',
+    cardEndingIn: 'Card ending in',
+    expiresOn: 'Expires',
+    addPaymentMethod: 'Add Payment Method',
+    changePaymentMethod: 'Change',
+    removePaymentMethod: 'Remove',
+    billingHistory: 'Billing History',
+    currentPlan: 'Current Plan',
+    professionalPlan: 'Professional Plan',
+    perMonth: '/month',
+    nextBillingDate: 'Next billing date',
+    paymentMethodUpdated: 'Payment method updated!',
+    paymentMethodRemoved: 'Payment method removed!',
+    
     // Team Page
     teamManagement: 'Team Management',
     addUser: 'Add User',
@@ -368,6 +384,22 @@ export const translations = {
     receptionist: 'Recepcionista',
     updateProfile: 'Actualizar Perfil',
     profileUpdated: '¡Perfil actualizado exitosamente!',
+    
+    // Billing
+    billing: 'Facturación',
+    paymentMethod: 'Método de Pago',
+    cardEndingIn: 'Tarjeta terminada en',
+    expiresOn: 'Vence',
+    addPaymentMethod: 'Agregar Método de Pago',
+    changePaymentMethod: 'Cambiar',
+    removePaymentMethod: 'Eliminar',
+    billingHistory: 'Historial de Facturación',
+    currentPlan: 'Plan Actual',
+    professionalPlan: 'Plan Profesional',
+    perMonth: '/mes',
+    nextBillingDate: 'Próxima fecha de facturación',
+    paymentMethodUpdated: '¡Método de pago actualizado!',
+    paymentMethodRemoved: '¡Método de pago eliminado!',
     
     // Team Page
     teamManagement: 'Gestión del Equipo',

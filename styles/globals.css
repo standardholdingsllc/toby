@@ -83,9 +83,17 @@
            border border-white/50 shadow-xl shadow-slate-900/5;
   }
   
+  .dark .stat-card {
+    @apply bg-slate-800/90 border-slate-700/50 shadow-black/30;
+  }
+  
   .stat-card::before {
     content: '';
     @apply absolute inset-0 bg-gradient-to-br from-white/50 to-transparent pointer-events-none;
+  }
+  
+  .dark .stat-card::before {
+    @apply from-slate-700/30 to-transparent;
   }
   
   .chat-bubble {
